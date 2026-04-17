@@ -798,7 +798,93 @@ function setScenario(k){
   currentKey=k;
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
   document.querySelector('.stab.'+k).classList.add('active');
-  renderProj();
+  // ─── CONFIGURAÇÃO GOOGLE SHEETS ───────────────────────────────────────────
+const SHEET_ID = '1YeeCoNOWaF23sn3UFXlDabFQXa7jQ8lA';
+
+const ABAS = {
+  forecast: 'Forecast',
+  receber:  'Contas_a_Receber',
+  pagar:    'Contas_a_Pagar',
+  extrato:  'Controle_Financeiro',
+};
+
+async function fetchSheet(aba) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(aba)}`;
+  const res  = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+  return json.table;
+}
+
+function tableToRows(t) {
+  const h = t.cols.map(c => c.label || c.id);
+  return t.rows.map(r => Object.fromEntries(h.map((k,i) => [k, r.c[i]?.v ?? null])));
+}
+
+function parseBRL(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'number') return v;
+  return parseFloat(String(v).replace(/[R$\s.]/g,'').replace(',','.')) || null;
+}
+
+function setStatus(msg, tipo) {
+  let bar = document.getElementById('api-status');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'api-status';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:8px 24px;font-size:12px;z-index:999;display:flex;align-items:center;gap:8px;transition:opacity .5s';
+    document.body.prepend(bar);
+  }
+  const cores = { ok:'166534;background:#D5F5E3', erro:'7F1D1D;background:#FADBD8', info:'1A5276;background:#D6EAF8' };
+  const [cor, bg] = (cores[tipo]||cores.info).split(';background:');
+  bar.style.color='#'+cor; bar.style.background='#'+bg;
+  bar.innerHTML = msg;
+  if (tipo==='ok') setTimeout(()=>bar.style.opacity='0', 3000);
+}
+
+async function initSheets() {
+  setStatus('Carregando dados do Google Sheets…', 'info');
+  try {
+    const mesesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const mesesProj = ['Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+    const tFc  = tableToRows(await fetchSheet(ABAS.forecast));
+    const tRcb = tableToRows(await fetchSheet(ABAS.receber));
+    const tPag = tableToRows(await fetchSheet(ABAS.pagar));
+    const tEx  = tableToRows(await fetchSheet(ABAS.extrato));
+
+    const fcMap = {};
+    tFc.forEach(r => { if (r['Mês']) fcMap[r['Mês']] = r; });
+
+    PLANEJADO = mesesNome.map(m => parseBRL(fcMap[m]?.['Meta de Receita (R$)']) ?? 0);
+    REALIZADO = mesesNome.map(m => parseBRL(fcMap[m]?.['Receita Realizada (R$)']));
+
+    const rcbMap = {};
+    tRcb.forEach(r => {
+      const m=r['Mês Ref.'], v=parseBRL(r['Valor Previsto (R$)']), s=r['Status'];
+      if (m&&v&&(s==='A RECEBER'||s==='RECEBIDO')) rcbMap[m]=(rcbMap[m]||0)+v;
+    });
+    REC_CONF  = mesesProj.map(m => rcbMap[m]||0);
+    META_PROJ = mesesProj.map(m => parseBRL(fcMap[m]?.['Meta de Receita (R$)'])||0);
+
+    const pagMap = {};
+    tPag.forEach(r => {
+      const m=r['Mês Ref.'], v=parseBRL(r['Valor (R$)']), s=r['Status'];
+      if (m&&v&&s==='A PAGAR') pagMap[m]=(pagMap[m]||0)+v;
+    });
+    DESPESAS = mesesProj.map(m => pagMap[m]||0);
+
+    const saldoRows = tEx.filter(r => parseBRL(r['Saldo (R$)'])!==null);
+    if (saldoRows.length) CAIXA = parseBRL(saldoRows[saldoRows.length-1]['Saldo (R$)'])||CAIXA;
+
+    setStatus('✓ Dados atualizados do Google Sheets', 'ok');
+  } catch(e) {
+    console.warn('Sheets falhou:', e);
+    setStatus('⚠ Não foi possível conectar ao Google Sheets — verifique se a planilha está publicada (Arquivo → Publicar na web)', 'erro');
+  }
+}
+
+initSheets().then(() => { renderAnual(); renderProj(); });
 }
 
 function renderProj(){
