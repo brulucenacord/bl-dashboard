@@ -884,7 +884,8 @@ async function initSheets() {
   }
 }
 
-initSheets().then(() => { renderAnual(); renderProj(); });
+initSheets().then(() => { renderAnual(); renderProj(); loadClientes(); });
+
 }
 
 function renderProj(){
@@ -1002,7 +1003,57 @@ function renderProj(){
     </div>`;
   }).join('');
 }
+async function loadClientes() {
+  try {
+    const rows = tableToRows(await fetchSheet('Cadastro_Clientes'));
 
+    const ativos   = rows.filter(r => r['Status'] === 'Ativo' && r['Quitado?'] === 'Não');
+    const quitados = rows.filter(r => r['Quitado?'] === 'Sim');
+
+    function initials(nome) {
+      if (!nome) return '?';
+      const p = nome.trim().split(' ');
+      return (p[0][0] + (p[1]?.[0] || '')).toUpperCase();
+    }
+
+    function renderAtivos(lista) {
+      return lista.map(r => {
+        const saldo = parseBRL(r['Saldo Devedor (R$)']) || 0;
+        return `<div class="client-row">
+          <div class="client-avatar">${initials(r['Nome do Cliente'])}</div>
+          <span class="client-name">${r['Nome do Cliente'] || '—'}</span>
+          <span class="client-prog">${r['Programa'] || ''}</span>
+          <span class="client-saldo">R$ ${Math.round(saldo).toLocaleString('pt-BR')}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderQuitados(lista) {
+      return lista.map(r => `
+        <div class="client-row">
+          <div class="client-avatar" style="background:var(--green-bg);color:var(--green)">${initials(r['Nome do Cliente'])}</div>
+          <span class="client-name">${r['Nome do Cliente'] || '—'}</span>
+          <span class="client-prog">${r['Programa'] || ''}</span>
+          <span class="client-ok">✓ Quitado</span>
+        </div>`).join('');
+    }
+
+    const tabAtivos   = document.getElementById('tab-ativos');
+    const tabQuitados = document.getElementById('tab-quitados');
+    if (tabAtivos)   tabAtivos.innerHTML   = ativos.length   ? renderAtivos(ativos)     : '<p style="font-size:12px;color:var(--muted);padding:8px 0">Nenhum cliente com saldo devedor.</p>';
+    if (tabQuitados) tabQuitados.innerHTML = quitados.length ? renderQuitados(quitados) : '<p style="font-size:12px;color:var(--muted);padding:8px 0">Nenhum cliente quitado.</p>';
+
+    // Atualiza KPI de clientes ativos
+    const totalAtivos = rows.filter(r => r['Status'] === 'Ativo').length;
+    const kpiAtivos = document.querySelector('.kpi-card.teal .kpi-value');
+    if (kpiAtivos) kpiAtivos.textContent = totalAtivos;
+    const kpiSub = document.querySelector('.kpi-card.teal .kpi-sub');
+    if (kpiSub) kpiSub.textContent = ativos.length + ' com saldo devedor';
+
+  } catch(e) {
+    console.warn('Erro ao carregar clientes:', e);
+  }
+}
 function showTab(t){
   document.getElementById('tab-ativos').style.display = t==='ativos'?'block':'none';
   document.getElementById('tab-quitados').style.display = t==='quitados'?'block':'none';
