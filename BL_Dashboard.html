@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BL Mentoring — Painel Financeiro 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:        #0D0C10;
+    --surface:   #16141A;
+    --surface2:  #1E1B24;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --text:      #F0EEF5;
+    --muted:     #7C7A88;
+    --muted2:    #4A4858;
+    --purple:    #9B87F5;
+    --purple-d:  #6D5BD0;
+    --purple-bg: rgba(155,135,245,0.10);
+    --green:     #4ADE80;
+    --green-d:   #166534;
+    --green-bg:  rgba(74,222,128,0.10);
+    --red:       #F87171;
+    --red-d:     #7F1D1D;
+    --red-bg:    rgba(248,113,113,0.10);
+    --amber:     #FBBF24;
+    --amber-bg:  rgba(251,191,36,0.10);
+    --teal:      #2DD4BF;
+    --teal-bg:   rgba(45,212,191,0.10);
+    --radius:    12px;
+    --radius-sm: 8px;
+    --radius-pill: 999px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── LAYOUT ── */
+  .shell { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .logo-mark {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: -.02em;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .nav { padding: 0 12px; flex: 1; }
+  .nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted2);
+    padding: 0 12px;
+    margin: 16px 0 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all .15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--purple-bg); color: var(--purple); }
+  .nav-item .icon { width: 16px; height: 16px; opacity: .7; flex-shrink: 0; }
+  .nav-item.active .icon { opacity: 1; }
+
+  .sidebar-footer {
+    padding: 16px 24px 0;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted2);
+  }
+  .sidebar-footer strong { color: var(--muted); display: block; font-weight: 500; }
+
+  .main { flex: 1; padding: 32px 36px; overflow-x: hidden; }
+
+  /* ── HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.02em;
+    line-height: 1.2;
+  }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .header-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .header-pill .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 32px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .kpi-card:hover { border-color: var(--border2); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-card.purple::before { background: var(--purple); }
+  .kpi-card.green::before  { background: var(--green); }
+  .kpi-card.red::before    { background: var(--red); }
+  .kpi-card.amber::before  { background: var(--amber); }
+  .kpi-card.teal::before   { background: var(--teal); }
+
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  .kpi-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -.02em; line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .kpi-sub.up   { color: var(--green); }
+  .kpi-sub.down { color: var(--red); }
+
+  /* ── CHART CARDS ── */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .charts-grid.triple { grid-template-columns: 2fr 1fr; }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+  .chart-card.span2 { grid-column: 1 / -1; }
+  .chart-card-header { margin-bottom: 16px; }
+  .chart-card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+  .chart-card-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .legend-sq { width: 10px; height: 10px; border-radius: 2px; }
+  .legend-ln { width: 16px; height: 2px; border-radius: 2px; }
+
+  /* ── SCENARIO TABS ── */
+  .scenario-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stab {
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    transition: all .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .stab:hover { border-color: var(--border2); color: var(--text); }
+  .stab.base.active  { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-d); }
+  .stab.bull.active  { background: var(--green-bg);  color: var(--green);  border-color: var(--green-d); }
+  .stab.bear.active  { background: var(--red-bg);    color: var(--red);    border-color: var(--red-d); }
+
+  /* ── ALERT BOX ── */
+  .alert-box {
+    background: var(--red-bg);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-left: 3px solid var(--red);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #fca5a5;
+    margin-bottom: 14px;
+  }
+  .alert-box strong { font-weight: 500; color: var(--red); }
+
+  /* ── VENCIMENTOS ── */
+  .venc-list { display: flex; flex-direction: column; gap: 7px; }
+  .venc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    background: var(--surface2);
+  }
+  .venc-date { font-weight: 500; min-width: 48px; font-family: 'Syne', sans-serif; font-size: 12px; }
+  .venc-name { flex: 1; color: var(--muted); }
+  .venc-val  { font-weight: 500; }
+  .venc-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .venc-dot.green { background: var(--green); }
+  .venc-dot.amber { background: var(--amber); }
+  .venc-dot.red   { background: var(--red); }
+
+  /* ── CLIENTS TABLE ── */
+  .client-list { display: flex; flex-direction: column; gap: 0; }
+  .client-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .client-row:last-child { border-bottom: none; }
+  .client-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--purple-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+    color: var(--purple);
+    flex-shrink: 0;
+    font-family: 'Syne', sans-serif;
+  }
+  .client-name { font-weight: 500; min-width: 130px; color: var(--text); }
+  .client-prog { color: var(--muted); flex: 1; font-size: 11px; }
+  .client-saldo { font-weight: 500; color: var(--red); }
+  .client-ok    { font-weight: 500; color: var(--green); font-size: 11px; }
+
+  /* ── MONTHLY TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted2); text-align: right; padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table th:first-child { text-align: left; }
+  .data-table td {
+    padding: 9px 10px; text-align: right;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .data-table td:first-child { text-align: left; font-weight: 500; color: var(--text); }
+  .data-table tbody tr:hover td { background: var(--surface2); }
+  .data-table .foot-row td { color: var(--text); font-weight: 500; background: var(--surface2); border-bottom: none; }
+  .data-table .pos { color: var(--green) !important; }
+  .data-table .neg { color: var(--red) !important; }
+  .data-table .dim { color: var(--muted2); font-style: italic; }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: var(--radius-pill); font-size: 10px; font-weight: 500; margin-left: 6px; }
+  .pill.real { background: var(--green-bg); color: var(--green); }
+  .pill.proj { background: var(--purple-bg); color: var(--purple); }
+
+  /* ── COMPARISON CARDS ── */
+  .cmp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .cmp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .cmp-card.base { border-top: 2px solid var(--purple); }
+  .cmp-card.bull { border-top: 2px solid var(--green); }
+  .cmp-card.bear { border-top: 2px solid var(--red); }
+  .cmp-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .cmp-row { display: flex; justify-content: space-between; font-size: 11px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .cmp-row:last-child { border-bottom: none; }
+  .cmp-label { color: var(--muted); }
+  .cmp-val { font-weight: 500; color: var(--text); }
+  .cmp-val.pos { color: var(--green); }
+  .cmp-val.neg { color: var(--red); }
+
+  /* ── PROGRESS BARS ── */
+  .progress-row { margin-bottom: 12px; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+  .progress-track { height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+
+  /* ── TAB SWITCHER ── */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tab-btn {
+    padding: 5px 14px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent; color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: all .15s;
+  }
+  .tab-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { padding: 20px 18px; }
+    .charts-grid, .charts-grid.triple { grid-template-columns: 1fr; }
+    .chart-card.span2 { grid-column: 1; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .cmp-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── ANIMATIONS ── */
+  .fade-in { animation: fadeIn .4s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .section { animation: fadeIn .35s ease both; }
+  .section:nth-child(2) { animation-delay: .05s; }
+  .section:nth-child(3) { animation-delay: .1s; }
+  .section:nth-child(4) { animation-delay: .15s; }
+  .section:nth-child(5) { animation-delay: .2s; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">BL Mentoring</div>
+      <div class="logo-sub">Painel Financeiro</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Visão Geral</div>
+      <button class="nav-item active">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12L6 8l3 3 5-7"/></svg>
+        Forecast
+      </button>
+      <div class="nav-label">Financeiro</div>
+      <button class="nav-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/><circle cx="8" cy="8" r="6"/></svg>
+        A Receber
+      </button>
+      <button class="nav-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 4l-4 4 4 4"/><circle cx="8" cy="8" r="6"/></svg>
+        A Pagar
+      </button>
+      <button class="nav-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 7h12"/><path d="M6 7v6"/></svg>
+        Extrato
+      </button>
+      <div class="nav-label">Clientes</div>
+      <button class="nav-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5"/></svg>
+        Cadastro
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <strong>Atualizado em</strong>
+      16/04/2026 · Abril
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Painel Executivo</div>
+        <div class="page-sub">BL Mentoring & Consulting · Abril 2026</div>
+      </div>
+      <div class="header-pill"><span class="dot"></span>Dados atualizados</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Visão Geral</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card purple">
+          <div class="kpi-label">Saldo atual (caixa)</div>
+          <div class="kpi-value">R$ 4.226</div>
+          <div class="kpi-sub down">▼ vs R$ 13.880 inicial</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Recebido em abril</div>
+          <div class="kpi-value">R$ 8.050</div>
+          <div class="kpi-sub down">26,8% da meta R$ 30.000</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-label">A receber (pendente)</div>
+          <div class="kpi-value">R$ 66.300</div>
+          <div class="kpi-sub" style="color:var(--muted)">17 parcelas em aberto</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">Total a pagar</div>
+          <div class="kpi-value">R$ 102.869</div>
+          <div class="kpi-sub down">até nov/2026</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="kpi-label">Clientes ativos</div>
+          <div class="kpi-value">13</div>
+          <div class="kpi-sub" style="color:var(--muted)">8 com saldo devedor</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-label">Ticket médio</div>
+          <div class="kpi-value">R$ 14.400</div>
+          <div class="kpi-sub up">↑ meta dez: R$ 24.700</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Receita 2026</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card span2">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Planejado × Realizado × Projeção</div>
+            <div class="chart-card-sub">Receita mensal 2026 (R$)</div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-sq" style="background:#4A4858"></span>Planejado</span>
+            <span class="legend-item"><span class="legend-sq" style="background:#4ADE80"></span>Realizado</span>
+            <span class="legend-item"><span class="legend-sq" style="background:#9B87F5; opacity:.7"></span>Projeção confirmada</span>
+          </div>
+          <div style="position:relative;height:240px">
+            <canvas id="chartAnual" role="img" aria-label="Receita mensal 2026 comparando planejado, realizado e projeção">Jan–Dez 2026: planejado vs realizado vs projeção.</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- META PROGRESS + DISTRIBUIÇÃO -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Atingimento</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="charts-grid triple">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Progresso de metas</div>
+            <div class="chart-card-sub">Meta anual R$ 1.371.500</div>
+          </div>
+          <div id="progress-section"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Carteira por cliente</div>
+            <div class="chart-card-sub">Receita total contratada</div>
+          </div>
+          <div style="position:relative;height:180px">
+            <canvas id="chartPie" role="img" aria-label="Distribuição de receita por cliente">Receita por cliente da carteira ativa.</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENCIMENTOS -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Próximos Vencimentos</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">A receber</div>
+            <div class="chart-card-sub">Parcelas mais próximas</div>
+          </div>
+          <div class="venc-list">
+            <div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">16/04</span><span class="venc-name">Alan Lima</span><span class="venc-val" style="color:var(--green)">R$ 6.250</span></div>
+            <div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">02/05</span><span class="venc-name">Guilherme</span><span class="venc-val" style="color:var(--green)">R$ 6.400</span></div>
+            <div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">15/05</span><span class="venc-name">Thaynara</span><span class="venc-val" style="color:var(--green)">R$ 5.760</span></div>
+            <div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">30/05</span><span class="venc-name">Arcus</span><span class="venc-val" style="color:var(--green)">R$ 10.000</span></div>
+            <div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">31/05</span><span class="venc-name">Fernando Macoto</span><span class="venc-val" style="color:var(--green)">R$ 7.500</span></div>
+            <div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">31/05</span><span class="venc-name">Tiago Ferreira</span><span class="venc-val" style="color:var(--green)">R$ 7.500</span></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">A pagar</div>
+            <div class="chart-card-sub">Saídas programadas</div>
+          </div>
+          <div class="venc-list">
+            <div class="venc-item"><span class="venc-dot amber"></span><span class="venc-date">abr</span><span class="venc-name">Boarding Academy 2/6</span><span class="venc-val" style="color:var(--amber)">R$ 3.332</span></div>
+            <div class="venc-item"><span class="venc-dot amber"></span><span class="venc-date">abr</span><span class="venc-name">Hospedagem Hotel 2/3</span><span class="venc-val" style="color:var(--amber)">R$ 1.378</span></div>
+            <div class="venc-item"><span class="venc-dot red"></span><span class="venc-date">abr</span><span class="venc-name">Assessoria Financeira</span><span class="venc-val" style="color:var(--red)">R$ 800</span></div>
+            <div class="venc-item"><span class="venc-dot amber"></span><span class="venc-date">abr</span><span class="venc-name">Manychat + Capcut</span><span class="venc-val" style="color:var(--amber)">R$ 182</span></div>
+            <div class="venc-item"><span class="venc-dot red"></span><span class="venc-date">15/05</span><span class="venc-name">Mentoria Própria 4/10</span><span class="venc-val" style="color:var(--red)">R$ 11.600</span></div>
+            <div class="venc-item"><span class="venc-dot amber"></span><span class="venc-date">03/05</span><span class="venc-name">Boarding Academy 3/6</span><span class="venc-val" style="color:var(--amber)">R$ 3.332</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORECAST -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Forecast — Mai a Dez 2026</span>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="alert-box">
+        <strong>Gap com a meta:</strong> Planejado acumulado até abril = R$ 297.500 · Realizado = R$ 158.000 (53%). Julho e Agosto têm zero receita confirmada contra R$ 11.781/mês de despesas fixas.
+      </div>
+
+      <div class="scenario-tabs">
+        <button class="stab base active" onclick="setScenario('base')">Base — parcelas confirmadas</button>
+        <button class="stab bull" onclick="setScenario('bull')">Otimista — novos clientes</button>
+        <button class="stab bear" onclick="setScenario('bear')">Conservador — 20% risco</button>
+      </div>
+
+      <div class="kpi-grid" id="proj-kpis" style="margin-bottom:14px"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Meta × Cenário × Despesas</div>
+            <div class="chart-card-sub" id="proj-sub">Parcelas confirmadas no cronograma</div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-sq" style="background:#4A4858"></span>Meta original</span>
+            <span class="legend-item"><span class="legend-sq" style="background:#9B87F5"></span>Cenário</span>
+            <span class="legend-item"><span class="legend-ln" style="background:var(--red)"></span>Despesas</span>
+          </div>
+          <div style="position:relative;height:220px">
+            <canvas id="chartProj" role="img" aria-label="Projeção de receita mai–dez 2026 nos diferentes cenários">Projeção mai–dez 2026.</canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Saldo acumulado projetado</div>
+            <div class="chart-card-sub">Partindo de R$ 4.226 — 3 cenários</div>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-ln" style="background:var(--purple)"></span>Base</span>
+            <span class="legend-item"><span class="legend-ln" style="background:var(--green)"></span>Otimista</span>
+            <span class="legend-item"><span class="legend-ln" style="background:var(--red)"></span>Conservador</span>
+          </div>
+          <div style="position:relative;height:220px">
+            <canvas id="chartAcum" role="img" aria-label="Saldo acumulado projetado nos 3 cenários">Saldo acumulado mai–dez 2026.</canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-top:14px">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Detalhamento mensal — <span id="scenario-label-tbl" style="color:var(--purple)">base</span></div>
+        </div>
+        <table class="data-table" id="proj-table"></table>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="section-header" style="margin-bottom:12px">
+          <span class="section-title">Comparativo dos 3 cenários</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="cmp-grid" id="cmp-grid"></div>
+      </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Saldo Devedor por Cliente</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="tab-bar">
+            <button class="tab-btn active" onclick="showTab('ativos')">Com saldo devedor</button>
+            <button class="tab-btn" onclick="showTab('quitados')">Quitados</button>
+          </div>
+          <div id="tab-ativos" class="client-list">
+            <div class="client-row"><div class="client-avatar">AR</div><span class="client-name">Arcus</span><span class="client-prog">JE-Business Scale</span><span class="client-saldo">R$ 10.000</span></div>
+            <div class="client-row"><div class="client-avatar">TH</div><span class="client-name">Thaynara</span><span class="client-prog">JC-Associate Full</span><span class="client-saldo">R$ 14.400</span></div>
+            <div class="client-row"><div class="client-avatar">GU</div><span class="client-name">Guilherme</span><span class="client-prog">JC-Associate Full</span><span class="client-saldo">R$ 13.400</span></div>
+            <div class="client-row"><div class="client-avatar">FM</div><span class="client-name">Fernando Macoto</span><span class="client-prog">JC-Associate Full</span><span class="client-saldo">R$ 7.500</span></div>
+            <div class="client-row"><div class="client-avatar">TF</div><span class="client-name">Tiago Ferreira</span><span class="client-prog">JC-Associate Full</span><span class="client-saldo">R$ 7.500</span></div>
+            <div class="client-row"><div class="client-avatar">AL</div><span class="client-name">Alan Lima</span><span class="client-prog">JE-Business Design</span><span class="client-saldo">R$ 6.250</span></div>
+            <div class="client-row"><div class="client-avatar">LY</div><span class="client-name">Lygia</span><span class="client-prog">JC-Associate Full</span><span class="client-saldo">R$ 10.000</span></div>
+            <div class="client-row"><div class="client-avatar">IN</div><span class="client-name">Ingrid</span><span class="client-prog">JC-Associate Full</span><span class="client-saldo">R$ 4.000</span></div>
+          </div>
+          <div id="tab-quitados" style="display:none" class="client-list">
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">AN</div><span class="client-name">Annie Gonçalves</span><span class="client-prog">FastTrack</span><span class="client-ok">✓ Quitado</span></div>
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">AB</div><span class="client-name">Ana Beatriz de Abreu</span><span class="client-prog">FastTrack</span><span class="client-ok">✓ Quitado</span></div>
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">ED</div><span class="client-name">Edipo</span><span class="client-prog">FastTrack</span><span class="client-ok">✓ Quitado</span></div>
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">FE</div><span class="client-name">Fernando</span><span class="client-prog">JC-Associate Down Sell</span><span class="client-ok">✓ Quitado</span></div>
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">MC</div><span class="client-name">Marcia Castanheira</span><span class="client-prog">JE-Business Design</span><span class="client-ok">✓ Quitado</span></div>
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">GM</div><span class="client-name">Gilberto Menezes</span><span class="client-prog">JC-Associate Full</span><span class="client-ok">✓ Quitado</span></div>
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">RG</div><span class="client-name">Renato Godoi</span><span class="client-prog">JC-Associate Full</span><span class="client-ok">✓ Quitado</span></div>
+            <div class="client-row"><div class="client-avatar" style="background:var(--green-bg);color:var(--green)">JM</div><span class="client-name">Jonathan Misael</span><span class="client-prog">JC-Associate Full</span><span class="client-ok">✓ Quitado</span></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Saldo devedor por cliente</div>
+            <div class="chart-card-sub">Maiores exposições</div>
+          </div>
+          <div style="position:relative;height:260px">
+            <canvas id="chartSaldo" role="img" aria-label="Gráfico de barras com saldo devedor por cliente">Saldo devedor: Arcus 10.000, Thaynara 14.400, Guilherme 13.400, Fernando Macoto 7.500, Tiago 7.500, Alan 6.250, Lygia 10.000, Ingrid 4.000.</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const MESES_FULL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_PROJ = ['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const PLANEJADO  = [37500,67600,67600,86400,106000,106000,134900,92500,127700,204100,154700,158000];
+const REALIZADO  = [61900,14400,24400,28800,null,null,null,null,null,null,null,null];
+const REC_CONF   = [28660,14000,0,0,12500,500,500,1000];
+const META_PROJ  = [106000,106000,134900,92500,127700,204100,154700,158000];
+const DESPESAS   = [16091,13514,11781,11781,11781,11781,11781,0];
+const CAIXA      = 4226;
+
+const SCENARIOS = {
+  base: { label:'Base',   sub:'Parcelas já lançadas no cronograma — sem novos clientes', fn:(r)=>r, despExtra:0 },
+  bull: { label:'Otimista', sub:'2 novos clientes em Mai e Jun (ticket R$ 14.400)', fn:(r,i)=>Math.round(r+(i<2?28800:i<6?6400:0)), despExtra:0 },
+  bear: { label:'Conservador', sub:'20% de inadimplência + R$ 1.500 extra/mês em despesas', fn:(r)=>Math.round(r*0.8), despExtra:1500 },
+};
+
+function buildRec(k){ return REC_CONF.map((r,i)=>SCENARIOS[k].fn(r,i)); }
+function buildDesp(k){ return DESPESAS.map(d=>d+(SCENARIOS[k].despExtra||0)); }
+
+function fmt(v){
+  if(v===null||v===undefined) return '—';
+  const a=Math.abs(Math.round(v));
+  const s='R$ '+a.toLocaleString('pt-BR');
+  return v<0?'('+s+')':s;
+}
+function fmtK(v){
+  if(v===0) return '0';
+  const a=Math.abs(Math.round(v/1000));
+  return (v<0?'-':'')+'R$'+a+'k';
+}
+function pct(a,b){ if(!b) return '—'; return (a/b*100).toFixed(1)+'%'; }
+
+// Chart defaults
+Chart.defaults.color = '#7C7A88';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+let projChart=null, acumChart=null;
+let currentKey='base';
+
+// ── ANUAL CHART ──
+new Chart(document.getElementById('chartAnual'),{
+  data:{
+    labels: MESES_FULL,
+    datasets:[
+      { type:'bar', label:'Planejado', data:PLANEJADO, backgroundColor:'#2C2C2A', borderRadius:4 },
+      { type:'bar', label:'Realizado', data:REALIZADO, backgroundColor:'#4ADE80', borderRadius:4 },
+      { type:'line', label:'Projeção', data:[null,null,null,null,...REC_CONF],
+        borderColor:'#9B87F5', borderWidth:2, borderDash:[5,4],
+        pointRadius:3, pointBackgroundColor:'#9B87F5', fill:false, tension:.3 }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88'} },
+      y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88', callback:v=>v===0?'0':fmtK(v)} }
+    }
+  }
+});
+
+// ── PIE CHART ──
+new Chart(document.getElementById('chartPie'),{
+  type:'doughnut',
+  data:{
+    labels:['Alan Lima','Arcus','F. Macoto','T. Ferreira','Guilherme','Thaynara','Ingrid','Lygia'],
+    datasets:[{
+      data:[12500,20000,15000,15000,14400,14900,4000,10000],
+      backgroundColor:['#9B87F5','#4ADE80','#F87171','#FBBF24','#2DD4BF','#818CF8','#FB923C','#6B7280'],
+      borderColor:'#0D0C10', borderWidth:2
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false, cutout:'60%',
+    plugins:{ legend:{display:true, position:'right', labels:{font:{size:10}, color:'#7C7A88', boxWidth:8, padding:6}} }
+  }
+});
+
+// ── SALDO CHART ──
+new Chart(document.getElementById('chartSaldo'),{
+  type:'bar',
+  data:{
+    labels:['Thaynara','Guilherme','Arcus','Lygia','F. Macoto','T. Ferreira','Alan Lima','Ingrid'],
+    datasets:[{
+      data:[14400,13400,10000,10000,7500,7500,6250,4000],
+      backgroundColor:['#F87171','#F87171','#FB923C','#FB923C','#FBBF24','#FBBF24','#A3E635','#4ADE80'],
+      borderRadius:4, borderSkipped:false
+    }]
+  },
+  options:{
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88', callback:v=>fmtK(v)} },
+      y:{ grid:{display:false}, ticks:{color:'#B4B2A9'} }
+    }
+  }
+});
+
+// ── PROGRESS BARS ──
+document.getElementById('progress-section').innerHTML = [
+  { label:'Meta abril atingida', val:8050, total:30000, color:'#9B87F5' },
+  { label:'Meta anual atingida', val:158000, total:1371500, color:'#4ADE80' },
+  { label:'Receita vs despesas abril', val:8050, total:17705, color:'#FBBF24' },
+  { label:'Clientes meta (13/63)', val:13, total:63, color:'#2DD4BF' },
+].map(p => {
+  const w = Math.min(100, Math.round(p.val/p.total*100));
+  return `<div class="progress-row">
+    <div class="progress-meta"><span>${p.label}</span><span>${w}%</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${w}%;background:${p.color}"></div></div>
+  </div>`;
+}).join('');
+
+// ── FORECAST ──
+function setScenario(k){
+  currentKey=k;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.stab.'+k).classList.add('active');
+  renderProj();
+}
+
+function renderProj(){
+  const s=SCENARIOS[currentKey];
+  const rec=buildRec(currentKey);
+  const desp=buildDesp(currentKey);
+  const liq=rec.map((r,i)=>r-desp[i]);
+  const totRec=rec.reduce((a,b)=>a+b,0);
+  const totDesp=desp.reduce((a,b)=>a+b,0);
+  const totLiq=totRec-totDesp;
+  const totMeta=META_PROJ.reduce((a,b)=>a+b,0);
+  const realAcum=158000;
+  const totalAno=realAcum+totRec;
+
+  document.getElementById('scenario-label-tbl').textContent=s.label.toLowerCase();
+  document.getElementById('proj-sub').textContent=s.sub;
+
+  const col=currentKey==='bull'?'#4ADE80':currentKey==='bear'?'#F87171':'#9B87F5';
+
+  document.getElementById('proj-kpis').innerHTML=[
+    {label:'Receita proj. mai–dez', val:fmt(totRec), sub:pct(totRec,totMeta)+' da meta período', cls:''},
+    {label:'Total ano (real+proj)',  val:fmt(totalAno), sub:pct(totalAno,1371500)+' da meta anual', cls:''},
+    {label:'Resultado líquido',      val:fmt(totLiq), sub:'receita – despesas', cls:totLiq>=0?'up':'down'},
+    {label:'Gap p/ meta mai–dez',    val:fmt(totMeta-totRec), sub:'falta fechar', cls:'down'},
+  ].map(k=>`<div class="kpi-card ${currentKey==='bull'?'green':currentKey==='bear'?'red':'purple'}">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-value">${k.val}</div>
+    <div class="kpi-sub ${k.cls}">${k.sub}</div>
+  </div>`).join('');
+
+  if(projChart) projChart.destroy();
+  projChart=new Chart(document.getElementById('chartProj'),{
+    data:{
+      labels:MESES_PROJ,
+      datasets:[
+        {type:'bar',label:'Meta',data:META_PROJ,backgroundColor:'#2C2C2A',borderRadius:4},
+        {type:'bar',label:'Cenário',data:rec,backgroundColor:col+'99',borderRadius:4},
+        {type:'line',label:'Despesas',data:desp,borderColor:'#F87171',borderWidth:2,
+         borderDash:[4,3],pointRadius:3,pointBackgroundColor:'#F87171',fill:false,tension:.2}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88'}},
+        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>v===0?'0':fmtK(v)}}
+      }
+    }
+  });
+
+  const bR=buildRec('base'), bD=buildDesp('base');
+  const bullR=buildRec('bull'), bullD=buildDesp('bull');
+  const bearR=buildRec('bear'), bearD=buildDesp('bear');
+  let ab=CAIXA,au=CAIXA,ae=CAIXA;
+  const acBase=[],acBull=[],acBear=[];
+  for(let i=0;i<8;i++){
+    ab+=bR[i]-bD[i]; acBase.push(Math.round(ab));
+    au+=bullR[i]-bullD[i]; acBull.push(Math.round(au));
+    ae+=bearR[i]-bearD[i]; acBear.push(Math.round(ae));
+  }
+
+  if(acumChart) acumChart.destroy();
+  acumChart=new Chart(document.getElementById('chartAcum'),{
+    type:'line',
+    data:{
+      labels:MESES_PROJ,
+      datasets:[
+        {label:'Base',data:acBase,borderColor:'#9B87F5',borderWidth:2,pointRadius:3,fill:false,tension:.3},
+        {label:'Otimista',data:acBull,borderColor:'#4ADE80',borderWidth:2,pointRadius:3,fill:false,tension:.3,borderDash:[6,3]},
+        {label:'Conservador',data:acBear,borderColor:'#F87171',borderWidth:2,pointRadius:3,fill:false,tension:.3,borderDash:[2,4]}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88'}},
+        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>fmtK(v)}}
+      }
+    }
+  });
+
+  const tbody=MESES_PROJ.map((m,i)=>{
+    const liqV=liq[i]; const liqC=liqV>=0?'pos':'neg';
+    const vs=META_PROJ[i]>0?pct(rec[i],META_PROJ[i]):'—';
+    const tipo=i<2?'real':'proj';
+    return `<tr><td>${m}/2026<span class="pill ${tipo}">${tipo==='real'?'confirmado':'projeção'}</span></td>
+      <td>${fmt(META_PROJ[i])}</td><td>${fmt(rec[i])}</td>
+      <td class="${pct(rec[i],META_PROJ[i]).replace('%','')>50?'pos':'neg'}">${vs}</td>
+      <td>${fmt(desp[i])}</td><td class="${liqC}">${fmt(liqV)}</td></tr>`;
+  }).join('');
+  const tR=totRec,tD=totDesp,tL=totLiq;
+  document.getElementById('proj-table').innerHTML=`
+    <thead><tr><th>Mês</th><th>Meta original</th><th>Receita proj.</th><th>% meta</th><th>Despesas</th><th>Resultado</th></tr></thead>
+    <tbody>${tbody}</tbody>
+    <tfoot><tr class="foot-row"><td>Total mai–dez</td><td>${fmt(totMeta)}</td><td>${fmt(tR)}</td>
+    <td class="${tR/totMeta>0.5?'pos':'neg'}">${pct(tR,totMeta)}</td><td>${fmt(tD)}</td>
+    <td class="${tL>=0?'pos':'neg'}">${fmt(tL)}</td></tr></tfoot>`;
+
+  document.getElementById('cmp-grid').innerHTML=['base','bull','bear'].map(k=>{
+    const r2=buildRec(k),d2=buildDesp(k);
+    const tR2=r2.reduce((a,b)=>a+b,0),tD2=d2.reduce((a,b)=>a+b,0),tL2=tR2-tD2;
+    let ac=CAIXA; r2.forEach((r,i)=>ac+=r-d2[i]);
+    const mg=tR2>0?(tL2/tR2*100).toFixed(1):'0.0';
+    const totalAno2=realAcum+tR2;
+    return `<div class="cmp-card ${k}">
+      <div class="cmp-name">${SCENARIOS[k].label}</div>
+      <div class="cmp-row"><span class="cmp-label">Receita mai–dez</span><span class="cmp-val">${fmt(tR2)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">% da meta período</span><span class="cmp-val ${tR2/totMeta>0.5?'pos':'neg'}">${pct(tR2,totMeta)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">Resultado líquido</span><span class="cmp-val ${tL2>=0?'pos':'neg'}">${fmt(tL2)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">Margem</span><span class="cmp-val">${mg}%</span></div>
+      <div class="cmp-row"><span class="cmp-label">Total ano projetado</span><span class="cmp-val">${fmt(totalAno2)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">% meta anual</span><span class="cmp-val ${totalAno2/1371500>0.3?'pos':'neg'}">${pct(totalAno2,1371500)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function showTab(t){
+  document.getElementById('tab-ativos').style.display = t==='ativos'?'block':'none';
+  document.getElementById('tab-quitados').style.display = t==='quitados'?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='ativos')||(i===1&&t==='quitados')));
+}
+
+renderProj();
+
+// Animate progress bars after load
+setTimeout(()=>{
+  document.querySelectorAll('.progress-fill').forEach(el=>{
+    const w=el.style.width; el.style.width='0';
+    setTimeout(()=>el.style.width=w, 50);
+  });
+}, 200);
+</script>
+</body>
+</html>
