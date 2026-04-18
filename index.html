@@ -394,83 +394,105 @@ async function loadForecast() {
 }
 
 async function loadReceber() {
-  const rows = tableToRows(await fetchSheet(ABAS.receber));
+  const t = await fetchSheet(ABAS.receber);
+  const rows = t.rows
+    .map(r => r.c.map(c => c?.v ?? null))
+    .filter(r => r[0] && String(r[0]).match(/\d{2}\/\d{2}\/\d{4}/));
 
-  const totalGeral   = rows.reduce((s,r) => s + (parseBRL(r['Valor Previsto (R$)'])||0), 0);
-  const totalRecebido= rows.filter(r=>r['Status']==='RECEBIDO').reduce((s,r)=>s+(parseBRL(r['Valor Previsto (R$)'])||0),0);
-  const totalAReceber= rows.filter(r=>r['Status']==='A RECEBER').reduce((s,r)=>s+(parseBRL(r['Valor Previsto (R$)'])||0),0);
-  const nPendentes   = rows.filter(r=>r['Status']==='A RECEBER').length;
+  // cols: 0=Data, 1=MêsRef, 2=Cliente, 3=Desc, 4=Tipo, 5=Valor, 6=Forma, 7=Status
+  const totalGeral    = rows.reduce((s,r) => s+(r[5]||0), 0);
+  const totalRecebido = rows.filter(r=>r[7]==='RECEBIDO').reduce((s,r)=>s+(r[5]||0),0);
+  const totalAReceber = rows.filter(r=>r[7]==='A RECEBER').reduce((s,r)=>s+(r[5]||0),0);
+  const nPendentes    = rows.filter(r=>r[7]==='A RECEBER').length;
 
   document.getElementById('kpi-recebido').textContent = fmt(totalRecebido);
   document.getElementById('kpi-recebido-sub').textContent = pct(totalRecebido, totalGeral) + ' do total';
   document.getElementById('kpi-areceber').textContent = fmt(totalAReceber);
   document.getElementById('kpi-areceber-sub').textContent = nPendentes + ' parcelas em aberto';
 
-  // Forecast: receitas confirmadas por mês de projeção
   const rcbMap = {};
   rows.forEach(r => {
-    const m=r['Mês Ref.'], v=parseBRL(r['Valor Previsto (R$)']), s=r['Status'];
+    const m=r[1], v=r[5], s=r[7];
     if (m&&v&&(s==='A RECEBER'||s==='RECEBIDO')) rcbMap[m]=(rcbMap[m]||0)+v;
   });
   REC_CONF = MESES_PROJ_NOME.map(m => rcbMap[m]||0);
 
-  // Vencimentos a receber (próximos 6 A RECEBER)
   const pendentes = rows
-    .filter(r => r['Status']==='A RECEBER' && r['Data Prevista'])
-    .sort((a,b) => new Date(a['Data Prevista']) - new Date(b['Data Prevista']))
-    .slice(0, 6);
+    .filter(r => r[7]==='A RECEBER')
+    .sort((a,b) => {
+      const [da,ma,ya] = String(a[0]).split('/');
+      const [db,mb,yb] = String(b[0]).split('/');
+      return new Date(`${ya}-${ma}-${da}`) - new Date(`${yb}-${mb}-${db}`);
+    })
+    .slice(0,6);
 
   document.getElementById('venc-receber').innerHTML = pendentes.length
-    ? pendentes.map(r => {
-        const d = r['Data Prevista'] ? new Date(r['Data Prevista']) : null;
-        const dataFmt = d ? d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : r['Mês Ref.']||'—';
-        return `<div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">${dataFmt}</span><span class="venc-name">${r['Cliente']||'—'}</span><span class="venc-val" style="color:var(--green)">${fmt(parseBRL(r['Valor Previsto (R$)']))}</span></div>`;
-      }).join('')
+    ? pendentes.map(r => `
+        <div class="venc-item">
+          <span class="venc-dot green"></span>
+          <span class="venc-date">${String(r[0]).slice(0,5)}</span>
+          <span class="venc-name">${r[2]||'—'}</span>
+          <span class="venc-val" style="color:var(--green)">${fmt(r[5])}</span>
+        </div>`).join('')
     : '<p class="empty-msg">Nenhum recebimento pendente.</p>';
 }
 
 async function loadPagar() {
-  const rows = tableToRows(await fetchSheet(ABAS.pagar));
+  const t = await fetchSheet(ABAS.pagar);
+  const rows = t.rows
+    .map(r => r.c.map(c => c?.v ?? null))
+    .filter(r => r[0] && String(r[0]).match(/\d{2}\/\d{2}\/\d{4}/));
 
-  const totalAPagar = rows.filter(r=>r['Status']==='A PAGAR').reduce((s,r)=>s+(parseBRL(r['Valor (R$)'])||0),0);
+  // cols: 0=DataVencto, 1=MêsRef, 2=Desc, 3=Fornecedor, 4=Categoria, 5=Valor, 6=Parcela, 7=Status
+  const totalAPagar = rows.filter(r=>r[7]==='A PAGAR').reduce((s,r)=>s+(r[5]||0),0);
   document.getElementById('kpi-apagar').textContent = fmt(totalAPagar);
   document.getElementById('kpi-apagar-sub').textContent = 'compromissos futuros';
 
-  // Despesas por mês de projeção
   const pagMap = {};
   rows.forEach(r => {
-    const m=r['Mês Ref.'], v=parseBRL(r['Valor (R$)']), s=r['Status'];
+    const m=r[1], v=r[5], s=r[7];
     if (m&&v&&s==='A PAGAR') pagMap[m]=(pagMap[m]||0)+v;
   });
   DESPESAS = MESES_PROJ_NOME.map(m => pagMap[m]||0);
 
-  // Vencimentos a pagar (próximos 6)
   const apagar = rows
-    .filter(r => r['Status']==='A PAGAR' && r['Data Vencto'])
-    .sort((a,b) => new Date(a['Data Vencto']) - new Date(b['Data Vencto']))
-    .slice(0, 6);
+    .filter(r => r[7]==='A PAGAR')
+    .sort((a,b) => {
+      const [da,ma,ya] = String(a[0]).split('/');
+      const [db,mb,yb] = String(b[0]).split('/');
+      return new Date(`${ya}-${ma}-${da}`) - new Date(`${yb}-${mb}-${db}`);
+    })
+    .slice(0,6);
 
   document.getElementById('venc-pagar').innerHTML = apagar.length
     ? apagar.map(r => {
-        const d = r['Data Vencto'] ? new Date(r['Data Vencto']) : null;
-        const dataFmt = d ? d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : r['Mês Ref.']||'—';
-        const cor = r['Categoria']==='Investimento Pessoal' ? 'red' : 'amber';
-        return `<div class="venc-item"><span class="venc-dot ${cor}"></span><span class="venc-date">${dataFmt}</span><span class="venc-name">${r['Descrição']||'—'}</span><span class="venc-val" style="color:var(--${cor})">${fmt(parseBRL(r['Valor (R$)']))}</span></div>`;
+        const cor = r[4]==='Investimento Pessoal' ? 'red' : 'amber';
+        return `<div class="venc-item">
+          <span class="venc-dot ${cor}"></span>
+          <span class="venc-date">${String(r[0]).slice(0,5)}</span>
+          <span class="venc-name">${r[2]||'—'}</span>
+          <span class="venc-val" style="color:var(--${cor})">${fmt(r[5])}</span>
+        </div>`;
       }).join('')
     : '<p class="empty-msg">Nenhum pagamento pendente.</p>';
 }
 
 async function loadExtrato() {
-  const rows = tableToRows(await fetchSheet(ABAS.extrato));
-  const saldoRows = rows.filter(r => parseBRL(r['Saldo (R$)']) !== null);
+  const t = await fetchSheet(ABAS.extrato);
+  const rows = t.rows
+    .map(r => r.c.map(c => c?.v ?? null))
+    .filter(r => r[0] && String(r[0]).match(/\d{2}\/\d{2}\/\d{4}/));
+
+  // cols: 0=Data, 1=Desc, 2=PlanoContas, 3=Tipo, 4=Entrada, 5=Saída, 6=Situação, 7=Saldo
+  const saldoRows = rows.filter(r => r[7] !== null && r[7] !== undefined);
   if (saldoRows.length) {
-    CAIXA = parseBRL(saldoRows[saldoRows.length-1]['Saldo (R$)']) || 0;
+    CAIXA = saldoRows[saldoRows.length-1][7] || 0;
   }
-  const saldoInicial = parseBRL(rows[0]?.['Saldo (R$)']) || 0;
+  const primeiroSaldo = rows.find(r => r[7] !== null)?.[7] || 0;
   document.getElementById('kpi-saldo').textContent = fmt(CAIXA);
-  document.getElementById('kpi-saldo-sub').innerHTML = CAIXA < saldoInicial
-    ? `<span class="down">▼ vs ${fmt(saldoInicial)} inicial</span>`
-    : `<span class="up">▲ vs ${fmt(saldoInicial)} inicial</span>`;
+  document.getElementById('kpi-saldo-sub').innerHTML = CAIXA < primeiroSaldo
+    ? `<span class="down">▼ vs ${fmt(primeiroSaldo)} inicial</span>`
+    : `<span class="up">▲ vs ${fmt(primeiroSaldo)} inicial</span>`;
 }
 
 async function loadClientes() {
