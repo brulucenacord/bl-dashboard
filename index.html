@@ -479,20 +479,22 @@ async function loadPagar() {
 
 async function loadExtrato() {
   const t = await fetchSheet(ABAS.extrato);
-  const rows = t.rows
-    .map(r => r.c.map(c => c?.v ?? null))
-    .filter(r => r[0] && String(r[0]).match(/\d{2}\/\d{2}\/\d{4}/));
+  const rows = t.rows.map(r => r.c.map(c => c?.v ?? null));
 
-  // cols: 0=Data, 1=Desc, 2=PlanoContas, 3=Tipo, 4=Entrada, 5=Saída, 6=Situação, 7=Saldo
-  const saldoRows = rows.filter(r => r[7] !== null && r[7] !== undefined);
-  if (saldoRows.length) {
-    CAIXA = saldoRows[saldoRows.length-1][7] || 0;
-  }
-  const primeiroSaldo = rows.find(r => r[7] !== null)?.[7] || 0;
+  // Saldo inicial fica na primeira linha (col 4, sem data)
+  const saldoInicial = rows[0]?.[4] || 0;
+
+  // Linhas com data real têm o formato "Date(yyyy,m,d)" na col 0
+  const dataRows = rows.filter(r => r[0] && String(r[0]).startsWith('Date('));
+
+  // Saldo atual = col 7 da última linha com data
+  const saldoRows = dataRows.filter(r => r[7] !== null);
+  CAIXA = saldoRows.length ? (saldoRows[saldoRows.length-1][7] || 0) : saldoInicial;
+
   document.getElementById('kpi-saldo').textContent = fmt(CAIXA);
-  document.getElementById('kpi-saldo-sub').innerHTML = CAIXA < primeiroSaldo
-    ? `<span class="down">▼ vs ${fmt(primeiroSaldo)} inicial</span>`
-    : `<span class="up">▲ vs ${fmt(primeiroSaldo)} inicial</span>`;
+  document.getElementById('kpi-saldo-sub').innerHTML = CAIXA < saldoInicial
+    ? `<span class="down">▼ vs ${fmt(saldoInicial)} inicial</span>`
+    : `<span class="up">▲ vs ${fmt(saldoInicial)} inicial</span>`;
 }
 
 async function loadClientes() {
@@ -573,20 +575,18 @@ async function loadClientes() {
 
   // Progress bars
   const metaAnual = PLANEJADO.reduce((a,b)=>a+b,0);
-  const metaMes   = PLANEJADO[3] || 30000;
-  const recMes    = REALIZADO[3] || 0;
-  const totalPago = rows.length;
-  document.getElementById('progress-section').innerHTML = [
-    { label:'Meta do mês atingida', val:recMes, total:metaMes, color:'#9B87F5' },
-    { label:'Meta anual atingida',  val:REALIZADO_ACUM, total:metaAnual, color:'#4ADE80' },
-    { label:'Clientes meta', val:totalAtivos, total:63, color:'#2DD4BF' },
-  ].map(p => {
-    const w = Math.min(100, Math.round((p.val/p.total)*100));
-    return `<div class="progress-row">
-      <div class="progress-meta"><span>${p.label}</span><span>${w}%</span></div>
-      <div class="progress-track"><div class="progress-fill" style="width:0%;background:${p.color}" data-target="${w}%"></div></div>
-    </div>`;
-  }).join('');
+const metaMes   = PLANEJADO[3] || 0;
+document.getElementById('progress-section').innerHTML = [
+  { label:'Meta do mês atingida (Abr)', val: REALIZADO[3]||0, total: metaMes||1, color:'#9B87F5' },
+  { label:'Meta anual atingida',        val: REALIZADO_ACUM,  total: metaAnual||1, color:'#4ADE80' },
+  { label:'Clientes meta (63)',         val: totalAtivos,      total: 63, color:'#2DD4BF' },
+].map(p => {
+  const w = Math.min(100, Math.round((p.val/p.total)*100));
+  return `<div class="progress-row">
+    <div class="progress-meta"><span>${p.label}</span><span>${w}%</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:0%;background:${p.color}" data-target="${w}%"></div></div>
+  </div>`;
+}).join('');
 
   setTimeout(() => {
     document.querySelectorAll('.progress-fill[data-target]').forEach(el => {
