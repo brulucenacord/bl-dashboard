@@ -369,20 +369,25 @@ let currentKey = 'base';
 
 // ─── LOADERS ─────────────────────────────────────────────────────────────────
 async function loadForecast() {
-  const rows = tableToRows(await fetchSheet(ABAS.forecast));
-  const fcMap = {};
-  rows.forEach(r => { if (r['Mês']) fcMap[r['Mês']] = r; });
+  const t = await fetchSheet(ABAS.forecast);
+  // Busca a linha que começa com "Janeiro" para achar o offset correto
+  const rows = t.rows.map(r => r.c.map(c => c?.v ?? null));
+  const dataRows = rows.filter(r => r[0] && typeof r[0] === 'string' && 
+    ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
+     'Agosto','Setembro','Outubro','Novembro','Dezembro'].includes(r[0]));
 
-  PLANEJADO = MESES_NOME.map(m => parseBRL(fcMap[m]?.['Meta de Receita (R$)']) ?? 0);
-  REALIZADO = MESES_NOME.map(m => parseBRL(fcMap[m]?.['Receita Realizada (R$)']));
-  META_PROJ = MESES_PROJ_NOME.map(m => parseBRL(fcMap[m]?.['Meta de Receita (R$)']) ?? 0);
+  const mesMap = {};
+  dataRows.forEach(r => { mesMap[r[0]] = { meta: r[1], realizado: r[2], despesas: r[6] }; });
+
+  PLANEJADO = MESES_NOME.map(m => mesMap[m]?.meta ?? 0);
+  REALIZADO = MESES_NOME.map(m => mesMap[m]?.realizado ?? null);
+  META_PROJ = MESES_PROJ_NOME.map(m => mesMap[m]?.meta ?? 0);
+  DESPESAS  = MESES_PROJ_NOME.map(m => mesMap[m]?.despesas ?? 0);
   REALIZADO_ACUM = REALIZADO.filter(v => v !== null).reduce((a,b) => a+b, 0);
 
-  // Meta anual
   const metaAnual = PLANEJADO.reduce((a,b) => a+b, 0);
   document.getElementById('meta-anual-sub').textContent = 'Meta anual ' + fmt(metaAnual);
 
-  // Alert gap
   const planned4 = PLANEJADO.slice(0,4).reduce((a,b)=>a+b,0);
   document.getElementById('alert-gap').innerHTML =
     `<strong>Gap com a meta:</strong> Planejado acumulado até abril = ${fmt(planned4)} · Realizado = ${fmt(REALIZADO_ACUM)} (${pct(REALIZADO_ACUM, planned4)}). Julho e Agosto têm zero receita confirmada contra despesas fixas mensais.`;
