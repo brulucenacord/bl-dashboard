@@ -510,8 +510,22 @@ async function loadExtrato() {
 }
 
 async function loadClientes() {
-  const rows = tableToRows(await fetchSheet(ABAS.clientes));
-  const ativos   = rows.filter(r => r['Status']==='Ativo');
+const [tCli, tRcb] = await Promise.all([
+  fetchSheet(ABAS.clientes),
+  fetchSheet(ABAS.receber)
+]);
+const rows = tableToRows(tCli);
+const rowsRcb = tRcb.rows.map(r => r.c.map(c => c?.v ?? null));
+
+// Calcula saldo devedor por cliente somando parcelas A RECEBER
+const saldoMap = {};
+rowsRcb
+  .filter(r => r[7] === 'A RECEBER')
+  .forEach(r => {
+    const cli = r[2];
+    const val = r[5] || 0;
+    if (cli) saldoMap[cli] = (saldoMap[cli] || 0) + val;
+  });  const ativos   = rows.filter(r => r['Status']==='Ativo');
   const comSaldo = ativos.filter(r => r['Quitado?']==='Não');
   const quitados = rows.filter(r => r['Quitado?']==='Sim');
 
@@ -528,7 +542,7 @@ async function loadClientes() {
   // Lista com saldo
   document.getElementById('tab-ativos').innerHTML = comSaldo.length
     ? comSaldo.map(r => {
-        const saldo = parseBRL(r['Saldo Devedor (R$)']) || 0;
+const saldo = saldoMap[r['Nome do Cliente']] || 0;
         return `<div class="client-row">
           <div class="client-avatar">${initials(r['Nome do Cliente'])}</div>
           <span class="client-name">${r['Nome do Cliente']||'—'}</span>
