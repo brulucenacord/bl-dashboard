@@ -397,8 +397,8 @@ async function loadReceber() {
   const t = await fetchSheet(ABAS.receber);
   const rows = t.rows
     .map(r => r.c.map(c => c?.v ?? null))
-    .filter(r => r[0] && String(r[0]).match(/\d{2}\/\d{2}\/\d{4}/));
-
+.filter(r => r[0] !== null && r[0] !== undefined && r[0] !== '' && !String(r[0]).includes('Receber') && !String(r[0]).includes('Data'));
+  
   // cols: 0=Data, 1=MêsRef, 2=Cliente, 3=Desc, 4=Tipo, 5=Valor, 6=Forma, 7=Status
   const totalGeral    = rows.reduce((s,r) => s+(r[5]||0), 0);
   const totalRecebido = rows.filter(r=>r[7]==='RECEBIDO').reduce((s,r)=>s+(r[5]||0),0);
@@ -441,7 +441,7 @@ async function loadPagar() {
   const t = await fetchSheet(ABAS.pagar);
   const rows = t.rows
     .map(r => r.c.map(c => c?.v ?? null))
-    .filter(r => r[0] && String(r[0]).match(/\d{2}\/\d{2}\/\d{4}/));
+.filter(r => r[0] !== null && r[0] !== undefined && r[0] !== '' && !String(r[0]).includes('Pagar') && !String(r[0]).includes('Data'));
 
   // cols: 0=DataVencto, 1=MêsRef, 2=Desc, 3=Fornecedor, 4=Categoria, 5=Valor, 6=Parcela, 7=Status
   const totalAPagar = rows.filter(r=>r[7]==='A PAGAR').reduce((s,r)=>s+(r[5]||0),0);
