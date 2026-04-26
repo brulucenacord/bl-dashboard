@@ -392,7 +392,19 @@ async function loadForecast() {
   document.getElementById('alert-gap').innerHTML =
     `<strong>Gap com a meta:</strong> Planejado acumulado até abril = ${fmt(planned4)} · Realizado = ${fmt(REALIZADO_ACUM)} (${pct(REALIZADO_ACUM, planned4)}). Julho e Agosto têm zero receita confirmada contra despesas fixas mensais.`;
 }
-
+function formatDate(v) {
+  if (!v) return '—';
+  const s = String(v);
+  // Formato "Date(yyyy,m,d)" do Google Sheets
+  const match = s.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (match) {
+    const d = new Date(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
+    return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+  }
+  // Formato "dd/mm/yyyy" direto
+  if (s.match(/\d{2}\/\d{2}\/\d{4}/)) return s.slice(0,5);
+  return s.slice(0,5);
+}
 async function loadReceber() {
   const t = await fetchSheet(ABAS.receber);
   const rows = t.rows
@@ -430,7 +442,7 @@ async function loadReceber() {
     ? pendentes.map(r => `
         <div class="venc-item">
           <span class="venc-dot green"></span>
-          <span class="venc-date">${String(r[0]).slice(0,5)}</span>
+          <span class="venc-date">${formatDate(r[0])}</span>
           <span class="venc-name">${r[2]||'—'}</span>
           <span class="venc-val" style="color:var(--green)">${fmt(r[5])}</span>
         </div>`).join('')
@@ -469,7 +481,7 @@ async function loadPagar() {
         const cor = r[4]==='Investimento Pessoal' ? 'red' : 'amber';
         return `<div class="venc-item">
           <span class="venc-dot ${cor}"></span>
-          <span class="venc-date">${String(r[0]).slice(0,5)}</span>
+<span class="venc-date">${formatDate(r[0])}</span>
           <span class="venc-name">${r[2]||'—'}</span>
           <span class="venc-val" style="color:var(--${cor})">${fmt(r[5])}</span>
         </div>`;
