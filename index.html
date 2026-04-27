@@ -56,6 +56,12 @@
   .kpi-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1}
   .kpi-sub{font-size:11px;color:var(--muted);margin-top:6px}
   .kpi-sub.up{color:var(--green)}.kpi-sub.down{color:var(--red)}
+  .mes-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;grid-column:1/-1;border-top:2px solid var(--teal)}
+  .mes-card-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .mes-select{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 12px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer}
+  .mes-kpis{display:flex;gap:24px;flex-wrap:wrap}
+  .mes-kpi{min-width:120px}
+  .mes-divider{width:1px;background:var(--border);align-self:stretch}
   .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .charts-grid.triple{grid-template-columns:2fr 1fr}
   .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px}
@@ -115,7 +121,8 @@
   .tab-btn{padding:5px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .15s}
   .tab-btn.active{background:var(--surface2);color:var(--text);border-color:var(--border2)}
   .empty-msg{font-size:12px;color:var(--muted);padding:8px 0}
-  @media(max-width:900px){.sidebar{display:none}.main{padding:20px 18px}.charts-grid,.charts-grid.triple{grid-template-columns:1fr}.chart-card.span2{grid-column:1}.kpi-grid{grid-template-columns:1fr 1fr}.cmp-grid{grid-template-columns:1fr}}
+  .pos{color:var(--green)}.neg{color:var(--red)}
+  @media(max-width:900px){.sidebar{display:none}.main{padding:20px 18px}.charts-grid,.charts-grid.triple{grid-template-columns:1fr}.chart-card.span2{grid-column:1}.kpi-grid{grid-template-columns:1fr 1fr}.cmp-grid{grid-template-columns:1fr}.mes-kpis{gap:12px}}
 </style>
 </head>
 <body>
@@ -136,23 +143,11 @@
         Forecast
       </button>
       <div class="nav-label">Financeiro</div>
-      <button class="nav-item">
-        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/><circle cx="8" cy="8" r="6"/></svg>
-        A Receber
-      </button>
-      <button class="nav-item">
-        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 4l-4 4 4 4"/><circle cx="8" cy="8" r="6"/></svg>
-        A Pagar
-      </button>
-      <button class="nav-item">
-        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 7h12"/><path d="M6 7v6"/></svg>
-        Extrato
-      </button>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/><circle cx="8" cy="8" r="6"/></svg>A Receber</button>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 4l-4 4 4 4"/><circle cx="8" cy="8" r="6"/></svg>A Pagar</button>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 7h12"/><path d="M6 7v6"/></svg>Extrato</button>
       <div class="nav-label">Clientes</div>
-      <button class="nav-item">
-        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5"/></svg>
-        Cadastro
-      </button>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5"/></svg>Cadastro</button>
     </nav>
     <div class="sidebar-footer">
       <strong>Atualizado em</strong>
@@ -173,17 +168,18 @@
     <div class="section">
       <div class="section-header"><span class="section-title">Visão Geral</span><div class="section-line"></div></div>
       <div class="kpi-grid">
-        <div class="kpi-card purple"><div class="kpi-label">Saldo atual (caixa)</div><div class="kpi-value" id="kpi-saldo">—</div><div class="kpi-sub down" id="kpi-saldo-sub">—</div></div>
-        <div class="kpi-card green"><div class="kpi-label">Recebido no mês</div><div class="kpi-value" id="kpi-recebido">—</div><div class="kpi-sub down" id="kpi-recebido-sub">—</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Saldo atual (caixa)</div><div class="kpi-value" id="kpi-saldo">—</div><div class="kpi-sub" id="kpi-saldo-sub">—</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Recebido no mês</div><div class="kpi-value" id="kpi-recebido">—</div><div class="kpi-sub" id="kpi-recebido-sub">—</div></div>
         <div class="kpi-card amber"><div class="kpi-label">A receber (pendente)</div><div class="kpi-value" id="kpi-areceber">—</div><div class="kpi-sub" id="kpi-areceber-sub">—</div></div>
-        <div class="kpi-card red"><div class="kpi-label">Total a pagar</div><div class="kpi-value" id="kpi-apagar">—</div><div class="kpi-sub down" id="kpi-apagar-sub">—</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Total a pagar</div><div class="kpi-value" id="kpi-apagar">—</div><div class="kpi-sub" id="kpi-apagar-sub">—</div></div>
         <div class="kpi-card teal"><div class="kpi-label">Clientes ativos</div><div class="kpi-value" id="kpi-clientes">—</div><div class="kpi-sub" id="kpi-clientes-sub">—</div></div>
-        <div class="kpi-card purple"><div class="kpi-label">Ticket médio</div><div class="kpi-value" id="kpi-ticket">—</div><div class="kpi-sub up" id="kpi-ticket-sub">—</div></div>
-        <div class="kpi-card green" style="grid-column:1/-1">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div class="kpi-card purple"><div class="kpi-label">Ticket médio</div><div class="kpi-value" id="kpi-ticket">—</div><div class="kpi-sub" id="kpi-ticket-sub">—</div></div>
+        <!-- Card de mês selecionável -->
+        <div class="mes-card">
+          <div class="mes-card-inner">
             <div>
-              <div class="kpi-label">Mês de referência</div>
-              <select id="mes-selector" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:4px 10px;font-size:13px;font-family:'DM Sans',sans-serif;margin-top:4px">
+              <div class="kpi-label">Visão por mês</div>
+              <select id="mes-selector" class="mes-select">
                 <option value="Janeiro">Janeiro</option>
                 <option value="Fevereiro">Fevereiro</option>
                 <option value="Março">Março</option>
@@ -198,20 +194,20 @@
                 <option value="Dezembro">Dezembro</option>
               </select>
             </div>
-            <div style="display:flex;gap:16px;flex-wrap:wrap">
-              <div>
+            <div class="mes-kpis">
+              <div class="mes-kpi">
                 <div class="kpi-label">A receber no mês</div>
                 <div class="kpi-value pos" id="kpi-receber-mes">—</div>
                 <div class="kpi-sub" id="kpi-receber-mes-sub">—</div>
               </div>
-              <div style="width:1px;background:var(--border)"></div>
-              <div>
+              <div class="mes-divider"></div>
+              <div class="mes-kpi">
                 <div class="kpi-label">A pagar no mês</div>
                 <div class="kpi-value" style="color:var(--amber)" id="kpi-pagar-mes">—</div>
                 <div class="kpi-sub" id="kpi-pagar-mes-sub">—</div>
               </div>
-              <div style="width:1px;background:var(--border)"></div>
-              <div>
+              <div class="mes-divider"></div>
+              <div class="mes-kpi">
                 <div class="kpi-label">Resultado do mês</div>
                 <div class="kpi-value" id="kpi-resultado-mes">—</div>
                 <div class="kpi-sub" id="kpi-resultado-mes-sub">—</div>
@@ -227,16 +223,13 @@
       <div class="section-header"><span class="section-title">Receita 2026</span><div class="section-line"></div></div>
       <div class="charts-grid">
         <div class="chart-card span2">
-          <div class="chart-card-header">
-            <div class="chart-card-title">Planejado × Realizado × Projeção</div>
-            <div class="chart-card-sub">Receita mensal 2026 (R$)</div>
-          </div>
+          <div class="chart-card-header"><div class="chart-card-title">Planejado × Realizado × Projeção</div><div class="chart-card-sub">Receita mensal 2026 (R$)</div></div>
           <div class="legend">
             <span class="legend-item"><span class="legend-sq" style="background:#4A4858"></span>Planejado</span>
             <span class="legend-item"><span class="legend-sq" style="background:#4ADE80"></span>Realizado</span>
             <span class="legend-item"><span class="legend-sq" style="background:#9B87F5;opacity:.7"></span>Projeção confirmada</span>
           </div>
-          <div style="position:relative;height:240px"><canvas id="chartAnual" role="img" aria-label="Receita mensal 2026">Receita 2026.</canvas></div>
+          <div style="position:relative;height:240px"><canvas id="chartAnual"></canvas></div>
         </div>
       </div>
     </div>
@@ -251,7 +244,7 @@
         </div>
         <div class="chart-card">
           <div class="chart-card-header"><div class="chart-card-title">Carteira por cliente</div><div class="chart-card-sub">Receita total contratada</div></div>
-          <div style="position:relative;height:180px"><canvas id="chartPie" role="img" aria-label="Distribuição por cliente">Receita por cliente.</canvas></div>
+          <div style="position:relative;height:180px"><canvas id="chartPie"></canvas></div>
         </div>
       </div>
     </div>
@@ -261,7 +254,7 @@
       <div class="section-header"><span class="section-title">Próximos Vencimentos</span><div class="section-line"></div></div>
       <div class="charts-grid">
         <div class="chart-card">
-          <div class="chart-card-header"><div class="chart-card-title">A receber</div><div class="chart-card-sub">Próximas parcelas</div></div>
+          <div class="chart-card-header"><div class="chart-card-title">A receber</div><div class="chart-card-sub">Próximas parcelas pendentes</div></div>
           <div id="venc-receber" class="venc-list"><p class="empty-msg">Carregando...</p></div>
         </div>
         <div class="chart-card">
@@ -289,7 +282,7 @@
             <span class="legend-item"><span class="legend-sq" style="background:#9B87F5"></span>Cenário</span>
             <span class="legend-item"><span class="legend-ln" style="background:var(--red)"></span>Despesas</span>
           </div>
-          <div style="position:relative;height:220px"><canvas id="chartProj" role="img" aria-label="Projeção mai–dez">Projeção.</canvas></div>
+          <div style="position:relative;height:220px"><canvas id="chartProj"></canvas></div>
         </div>
         <div class="chart-card">
           <div class="chart-card-header"><div class="chart-card-title">Saldo acumulado projetado</div><div class="chart-card-sub">3 cenários comparados</div></div>
@@ -298,7 +291,7 @@
             <span class="legend-item"><span class="legend-ln" style="background:var(--green)"></span>Otimista</span>
             <span class="legend-item"><span class="legend-ln" style="background:var(--red)"></span>Conservador</span>
           </div>
-          <div style="position:relative;height:220px"><canvas id="chartAcum" role="img" aria-label="Saldo acumulado">Saldo acumulado.</canvas></div>
+          <div style="position:relative;height:220px"><canvas id="chartAcum"></canvas></div>
         </div>
       </div>
       <div class="chart-card" style="margin-top:14px">
@@ -325,7 +318,7 @@
         </div>
         <div class="chart-card">
           <div class="chart-card-header"><div class="chart-card-title">Saldo devedor por cliente</div><div class="chart-card-sub">Maiores exposições</div></div>
-          <div style="position:relative;height:260px"><canvas id="chartSaldo" role="img" aria-label="Saldo devedor por cliente">Saldo devedor.</canvas></div>
+          <div style="position:relative;height:280px"><canvas id="chartSaldo"></canvas></div>
         </div>
       </div>
     </div>
@@ -333,7 +326,7 @@
 </div>
 
 <script>
-// ─── CONFIGURAÇÃO ────────────────────────────────────────────────────────────
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
 const SHEET_ID = '1Ju6KlvDIW6xAiBJlkkKcPyRs5N9Q_NbfGzP68MAwQeg';
 const ABAS = {
   forecast: '🎯 Forecast',
@@ -351,9 +344,8 @@ async function fetchSheet(aba) {
   const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
   return json.table;
 }
-function tableToRows(t) {
-  const h = t.cols.map(c => c.label || c.id);
-  return t.rows.map(r => Object.fromEntries(h.map((k,i) => [k, r.c[i]?.v ?? null])));
+function rawRows(t) {
+  return t.rows.map(r => r.c.map(c => c?.v ?? null));
 }
 function parseBRL(v) {
   if (v === null || v === undefined) return null;
@@ -371,15 +363,31 @@ function fmtK(v) {
   const a = Math.abs(Math.round(v/1000));
   return (v < 0 ? '-' : '') + 'R$' + a + 'k';
 }
-function pct(a, b) { return (!b) ? '—' : (a/b*100).toFixed(1) + '%'; }
+function pct(a,b) { return (!b) ? '—' : (a/b*100).toFixed(1)+'%'; }
 function initials(nome) {
   if (!nome) return '?';
   const p = String(nome).trim().split(' ');
-  return (p[0][0] + (p[1]?.[0] || '')).toUpperCase();
+  return (p[0][0]+(p[1]?.[0]||'')).toUpperCase();
 }
 function setStatus(msg, ok) {
   document.getElementById('status-text').textContent = msg;
   document.querySelector('.header-pill .dot').style.background = ok ? 'var(--green)' : 'var(--amber)';
+}
+function formatDate(v) {
+  if (!v) return '—';
+  const s = String(v);
+  const m = s.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (m) {
+    const d = new Date(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]));
+    return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  }
+  if (s.match(/\d{2}\/\d{2}\/\d{4}/)) return s.slice(0,5);
+  return s.slice(0,5);
+}
+function isDataRow(v) {
+  if (v === null || v === undefined) return false;
+  const s = String(v);
+  return s.match(/Date\(/) || s.match(/^\d{2}\/\d{2}\/\d{4}$/);
 }
 
 Chart.defaults.color = '#7C7A88';
@@ -389,23 +397,24 @@ Chart.defaults.font.size = 11;
 
 // ─── ESTADO GLOBAL ────────────────────────────────────────────────────────────
 let PLANEJADO = [];
-let ALL_RECEBER_ROWS = [];
-let ALL_PAGAR_ROWS = [];
 let REALIZADO = [];
-let REC_CONF = [];
+let REC_CONF  = [];
 let META_PROJ = [];
-let DESPESAS = [];
-let CAIXA = 0;
+let DESPESAS  = [];
+let CAIXA     = 0;
 let REALIZADO_ACUM = 0;
-const MESES_FULL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const MESES_PROJ = ['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const MESES_NOME = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const MESES_PROJ_NOME = ['Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let ALL_RECEBER_ROWS = [];
+let ALL_PAGAR_ROWS   = [];
+
+const MESES_FULL     = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_PROJ     = ['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_NOME     = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES_PROJ_NOME= ['Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 const SCENARIOS = {
-  base: { label:'Base',      sub:'Parcelas já lançadas no cronograma — sem novos clientes', fn:(r)=>r,              despExtra:0    },
-  bull: { label:'Otimista',  sub:'2 novos clientes em Mai e Jun (ticket R$ 14.400)',         fn:(r,i)=>Math.round(r+(i<2?28800:i<6?6400:0)), despExtra:0 },
-  bear: { label:'Conservador', sub:'20% de inadimplência + R$ 1.500 extra/mês em despesas', fn:(r)=>Math.round(r*0.8), despExtra:1500 },
+  base: { label:'Base',       sub:'Parcelas já lançadas no cronograma — sem novos clientes', fn:(r)=>r,                              despExtra:0    },
+  bull: { label:'Otimista',   sub:'2 novos clientes em Mai e Jun (ticket R$ 14.400)',         fn:(r,i)=>Math.round(r+(i<2?28800:0)), despExtra:0    },
+  bear: { label:'Conservador',sub:'20% de inadimplência + R$ 1.500 extra/mês em despesas',   fn:(r)=>Math.round(r*0.8),             despExtra:1500 },
 };
 
 function buildRec(k) { return REC_CONF.map((r,i) => SCENARIOS[k].fn(r,i)); }
@@ -414,22 +423,52 @@ function buildDesp(k) { return DESPESAS.map(d => d + (SCENARIOS[k].despExtra||0)
 let chartAnual=null, chartPie=null, chartProj=null, chartAcum=null, chartSaldo=null;
 let currentKey = 'base';
 
+// ─── KPIs POR MÊS ────────────────────────────────────────────────────────────
+function atualizarKpisMes() {
+  const mes = document.getElementById('mes-selector')?.value;
+  if (!mes) return;
+
+  const recMes = ALL_RECEBER_ROWS
+    .filter(r => r[1] === mes)
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const recPendente = ALL_RECEBER_ROWS
+    .filter(r => r[1] === mes && r[7] === 'A RECEBER')
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const pagMes = ALL_PAGAR_ROWS
+    .filter(r => r[1] === mes)
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const pagPendente = ALL_PAGAR_ROWS
+    .filter(r => r[1] === mes && r[7] === 'A PAGAR')
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const resultado = recMes - pagMes;
+
+  document.getElementById('kpi-receber-mes').textContent = fmt(recMes);
+  document.getElementById('kpi-receber-mes-sub').textContent = fmt(recPendente)+' pendente';
+  document.getElementById('kpi-pagar-mes').textContent = fmt(pagMes);
+  document.getElementById('kpi-pagar-mes-sub').textContent = fmt(pagPendente)+' a pagar';
+
+  const elRes = document.getElementById('kpi-resultado-mes');
+  elRes.textContent = fmt(resultado);
+  elRes.className = 'kpi-value ' + (resultado >= 0 ? 'pos' : 'neg');
+  document.getElementById('kpi-resultado-mes-sub').textContent = resultado >= 0 ? 'superávit' : 'déficit';
+}
+
 // ─── LOADERS ─────────────────────────────────────────────────────────────────
 async function loadForecast() {
   const t = await fetchSheet(ABAS.forecast);
-  // Busca a linha que começa com "Janeiro" para achar o offset correto
-  const rows = t.rows.map(r => r.c.map(c => c?.v ?? null));
-  const dataRows = rows.filter(r => r[0] && typeof r[0] === 'string' && 
-    ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
-     'Agosto','Setembro','Outubro','Novembro','Dezembro'].includes(r[0]));
+  const rows = rawRows(t);
+  const dataRows = rows.filter(r => r[0] && MESES_NOME.includes(String(r[0])));
 
   const mesMap = {};
-  dataRows.forEach(r => { mesMap[r[0]] = { meta: r[1], realizado: r[2], despesas: r[6] }; });
+  dataRows.forEach(r => { mesMap[String(r[0])] = r; });
 
-  PLANEJADO = MESES_NOME.map(m => mesMap[m]?.meta ?? 0);
-  REALIZADO = MESES_NOME.map(m => mesMap[m]?.realizado ?? null);
-  META_PROJ = MESES_PROJ_NOME.map(m => mesMap[m]?.meta ?? 0);
-  DESPESAS  = MESES_PROJ_NOME.map(m => mesMap[m]?.despesas ?? 0);
+  PLANEJADO      = MESES_NOME.map(m => mesMap[m]?.[1] ?? 0);
+  REALIZADO      = MESES_NOME.map(m => mesMap[m]?.[2] ?? null);
+  META_PROJ      = MESES_PROJ_NOME.map(m => mesMap[m]?.[1] ?? 0);
   REALIZADO_ACUM = REALIZADO.filter(v => v !== null).reduce((a,b) => a+b, 0);
 
   const metaAnual = PLANEJADO.reduce((a,b) => a+b, 0);
@@ -437,60 +476,14 @@ async function loadForecast() {
 
   const planned4 = PLANEJADO.slice(0,4).reduce((a,b)=>a+b,0);
   document.getElementById('alert-gap').innerHTML =
-    `<strong>Gap com a meta:</strong> Planejado acumulado até abril = ${fmt(planned4)} · Realizado = ${fmt(REALIZADO_ACUM)} (${pct(REALIZADO_ACUM, planned4)}). Julho e Agosto têm zero receita confirmada contra despesas fixas mensais.`;
+    `<strong>Gap com a meta:</strong> Planejado acumulado até abril = ${fmt(planned4)} · Realizado = ${fmt(REALIZADO_ACUM)} (${pct(REALIZADO_ACUM,planned4)}). Julho e Agosto têm zero receita confirmada contra despesas fixas mensais.`;
 }
-  function atualizarKpisMes() {
-  const mes = document.getElementById('mes-selector')?.value;
-  if (!mes) return;
 
-  const recMes = ALL_RECEBER_ROWS
-    .filter(r => r[1] === mes)
-    .reduce((s,r) => s + (r[5]||0), 0);
-
-  const recPendente = ALL_RECEBER_ROWS
-    .filter(r => r[1] === mes && r[7] === 'A RECEBER')
-    .reduce((s,r) => s + (r[5]||0), 0);
-
-  const pagMes = ALL_PAGAR_ROWS
-    .filter(r => r[1] === mes)
-    .reduce((s,r) => s + (r[5]||0), 0);
-
-  const pagPendente = ALL_PAGAR_ROWS
-    .filter(r => r[1] === mes && r[7] === 'A PAGAR')
-    .reduce((s,r) => s + (r[5]||0), 0);
-
-  const resultado = recMes - pagMes;
-
-  document.getElementById('kpi-receber-mes').textContent = fmt(recMes);
-  document.getElementById('kpi-receber-mes-sub').textContent = fmt(recPendente) + ' pendente';
-  document.getElementById('kpi-pagar-mes').textContent = fmt(pagMes);
-  document.getElementById('kpi-pagar-mes-sub').textContent = fmt(pagPendente) + ' a pagar';
-
-  const elRes = document.getElementById('kpi-resultado-mes');
-  elRes.textContent = fmt(resultado);
-  elRes.style.color = resultado >= 0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('kpi-resultado-mes-sub').textContent = resultado >= 0 ? 'superávit' : 'déficit';
-}
-  
-function formatDate(v) {
-  if (!v) return '—';
-  const s = String(v);
-  // Formato "Date(yyyy,m,d)" do Google Sheets
-  const match = s.match(/Date\((\d+),(\d+),(\d+)\)/);
-  if (match) {
-    const d = new Date(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
-    return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
-  }
-  // Formato "dd/mm/yyyy" direto
-  if (s.match(/\d{2}\/\d{2}\/\d{4}/)) return s.slice(0,5);
-  return s.slice(0,5);
-}
 async function loadReceber() {
   const t = await fetchSheet(ABAS.receber);
-  const rows = t.rows
-    .map(r => r.c.map(c => c?.v ?? null))
-.filter(r => r[0] !== null && r[0] !== undefined && r[0] !== '' && !String(r[0]).includes('Receber') && !String(r[0]).includes('Data'));
-  
+  const rows = rawRows(t).filter(r => isDataRow(r[0]));
+  ALL_RECEBER_ROWS = rows;
+
   // cols: 0=Data, 1=MêsRef, 2=Cliente, 3=Desc, 4=Tipo, 5=Valor, 6=Forma, 7=Status
   const totalGeral    = rows.reduce((s,r) => s+(r[5]||0), 0);
   const totalRecebido = rows.filter(r=>r[7]==='RECEBIDO').reduce((s,r)=>s+(r[5]||0),0);
@@ -498,43 +491,36 @@ async function loadReceber() {
   const nPendentes    = rows.filter(r=>r[7]==='A RECEBER').length;
 
   document.getElementById('kpi-recebido').textContent = fmt(totalRecebido);
-  document.getElementById('kpi-recebido-sub').textContent = pct(totalRecebido, totalGeral) + ' do total';
+  document.getElementById('kpi-recebido-sub').textContent = pct(totalRecebido,totalGeral)+' do total';
   document.getElementById('kpi-areceber').textContent = fmt(totalAReceber);
-  document.getElementById('kpi-areceber-sub').textContent = nPendentes + ' parcelas em aberto';
+  document.getElementById('kpi-areceber-sub').textContent = nPendentes+' parcelas em aberto';
 
   const rcbMap = {};
   rows.forEach(r => {
     const m=r[1], v=r[5], s=r[7];
     if (m&&v&&(s==='A RECEBER'||s==='RECEBIDO')) rcbMap[m]=(rcbMap[m]||0)+v;
   });
-  REC_CONF = MESES_PROJ_NOME.map ALL_RECEBER_ROWS = rows;
-atualizarKpisMes();(m => rcbMap[m]||0);
+  REC_CONF = MESES_PROJ_NOME.map(m => rcbMap[m]||0);
 
   const pendentes = rows
     .filter(r => r[7]==='A RECEBER')
     .sort((a,b) => {
-      const [da,ma,ya] = String(a[0]).split('/');
-      const [db,mb,yb] = String(b[0]).split('/');
-      return new Date(`${ya}-${ma}-${da}`) - new Date(`${yb}-${mb}-${db}`);
+      const parseD = v => { const m=String(v).match(/Date\((\d+),(\d+),(\d+)\)/); return m?new Date(+m[1],+m[2],+m[3]):new Date(String(v).split('/').reverse().join('-')); };
+      return parseD(a[0]) - parseD(b[0]);
     })
     .slice(0,6);
 
   document.getElementById('venc-receber').innerHTML = pendentes.length
-    ? pendentes.map(r => `
-        <div class="venc-item">
-          <span class="venc-dot green"></span>
-          <span class="venc-date">${formatDate(r[0])}</span>
-          <span class="venc-name">${r[2]||'—'}</span>
-          <span class="venc-val" style="color:var(--green)">${fmt(r[5])}</span>
-        </div>`).join('')
+    ? pendentes.map(r => `<div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">${formatDate(r[0])}</span><span class="venc-name">${r[2]||'—'}</span><span class="venc-val" style="color:var(--green)">${fmt(r[5])}</span></div>`).join('')
     : '<p class="empty-msg">Nenhum recebimento pendente.</p>';
+
+  atualizarKpisMes();
 }
 
 async function loadPagar() {
   const t = await fetchSheet(ABAS.pagar);
-  const rows = t.rows
-    .map(r => r.c.map(c => c?.v ?? null))
-.filter(r => r[0] !== null && r[0] !== undefined && r[0] !== '' && !String(r[0]).includes('Pagar') && !String(r[0]).includes('Data'));
+  const rows = rawRows(t).filter(r => isDataRow(r[0]));
+  ALL_PAGAR_ROWS = rows;
 
   // cols: 0=DataVencto, 1=MêsRef, 2=Desc, 3=Fornecedor, 4=Categoria, 5=Valor, 6=Parcela, 7=Status
   const totalAPagar = rows.filter(r=>r[7]==='A PAGAR').reduce((s,r)=>s+(r[5]||0),0);
@@ -546,43 +532,35 @@ async function loadPagar() {
     const m=r[1], v=r[5], s=r[7];
     if (m&&v&&s==='A PAGAR') pagMap[m]=(pagMap[m]||0)+v;
   });
-  DESPESAS = MESES_PROJ_NOME.map ALL_PAGAR_ROWS = rows;
-atualizarKpisMes();(m => pagMap[m]||0);
+  DESPESAS = MESES_PROJ_NOME.map(m => pagMap[m]||0);
+
   const apagar = rows
     .filter(r => r[7]==='A PAGAR')
     .sort((a,b) => {
-      const [da,ma,ya] = String(a[0]).split('/');
-      const [db,mb,yb] = String(b[0]).split('/');
-      return new Date(`${ya}-${ma}-${da}`) - new Date(`${yb}-${mb}-${db}`);
+      const parseD = v => { const m=String(v).match(/Date\((\d+),(\d+),(\d+)\)/); return m?new Date(+m[1],+m[2],+m[3]):new Date(String(v).split('/').reverse().join('-')); };
+      return parseD(a[0]) - parseD(b[0]);
     })
     .slice(0,6);
 
   document.getElementById('venc-pagar').innerHTML = apagar.length
     ? apagar.map(r => {
         const cor = r[4]==='Investimento Pessoal' ? 'red' : 'amber';
-        return `<div class="venc-item">
-          <span class="venc-dot ${cor}"></span>
-<span class="venc-date">${formatDate(r[0])}</span>
-          <span class="venc-name">${r[2]||'—'}</span>
-          <span class="venc-val" style="color:var(--${cor})">${fmt(r[5])}</span>
-        </div>`;
+        return `<div class="venc-item"><span class="venc-dot ${cor}"></span><span class="venc-date">${formatDate(r[0])}</span><span class="venc-name">${r[2]||'—'}</span><span class="venc-val" style="color:var(--${cor})">${fmt(r[5])}</span></div>`;
       }).join('')
     : '<p class="empty-msg">Nenhum pagamento pendente.</p>';
+
+  atualizarKpisMes();
 }
 
 async function loadExtrato() {
   const t = await fetchSheet(ABAS.extrato);
-  const rows = t.rows.map(r => r.c.map(c => c?.v ?? null));
-
-  // Saldo inicial fica na primeira linha (col 4, sem data)
+  const rows = rawRows(t);
+  // Saldo inicial = primeira linha que tem valor na col 4 mas não tem data
   const saldoInicial = rows[0]?.[4] || 0;
-
-  // Linhas com data real têm o formato "Date(yyyy,m,d)" na col 0
-  const dataRows = rows.filter(r => r[0] && String(r[0]).startsWith('Date('));
-
-  // Saldo atual = col 7 da última linha com data
-  const saldoRows = dataRows.filter(r => r[7] !== null);
-  CAIXA = saldoRows.length ? (saldoRows[saldoRows.length-1][7] || 0) : saldoInicial;
+  // Linhas com data real
+  const dataRows = rows.filter(r => isDataRow(r[0]));
+  const comSaldo = dataRows.filter(r => r[7] !== null && r[7] !== undefined);
+  CAIXA = comSaldo.length ? (comSaldo[comSaldo.length-1][7] || 0) : saldoInicial;
 
   document.getElementById('kpi-saldo').textContent = fmt(CAIXA);
   document.getElementById('kpi-saldo-sub').innerHTML = CAIXA < saldoInicial
@@ -591,114 +569,98 @@ async function loadExtrato() {
 }
 
 async function loadClientes() {
-const [tCli, tRcb] = await Promise.all([
-  fetchSheet(ABAS.clientes),
-  fetchSheet(ABAS.receber)
-]);
-const rows = tableToRows(tCli);
-const rowsRcb = tRcb.rows.map(r => r.c.map(c => c?.v ?? null));
+  const [tCli, tRcb] = await Promise.all([
+    fetchSheet(ABAS.clientes),
+    fetchSheet(ABAS.receber)
+  ]);
 
-// Calcula saldo devedor por cliente somando parcelas A RECEBER
-const saldoMap = {};
-rowsRcb
-  .filter(r => r[7] === 'A RECEBER')
-  .forEach(r => {
+  // Calcula saldo devedor somando A RECEBER por cliente
+  const rcbRows = rawRows(tRcb).filter(r => isDataRow(r[0]));
+  const saldoMap = {};
+  rcbRows.filter(r => r[7]==='A RECEBER').forEach(r => {
     const cli = r[2];
-    const val = r[5] || 0;
-    if (cli) saldoMap[cli] = (saldoMap[cli] || 0) + val;
-  });  const ativos   = rows.filter(r => r['Status']==='Ativo');
-  const comSaldo = ativos.filter(r => r['Quitado?']==='Não');
-  const quitados = rows.filter(r => r['Quitado?']==='Sim');
+    if (cli) saldoMap[cli] = (saldoMap[cli]||0) + (r[5]||0);
+  });
 
-  // KPIs
+  // Clientes — lê por posição para evitar problema de cabeçalho
+  // cols: 0=#, 1=Nome, 2=Programa, 3=ValorContrato, 4=NSessoes, 5=QtdParcelas, 6=ValorParcela, 7=DataInicio, 8=DataFim, 9=Status, 10=Quitado
+  const cliRows = rawRows(tCli).filter(r => r[1] && typeof r[1]==='string' && !r[1].includes('CADASTRO') && !r[1].includes('Nome') && !r[1].includes('Preencha') && !r[1].includes('TOTAL'));
+
+  const ativos   = cliRows.filter(r => r[9]==='Ativo');
+  const comSaldo = ativos.filter(r => r[10]==='Não');
+  const quitados = cliRows.filter(r => r[10]==='Sim');
+
   const totalAtivos = ativos.length;
   document.getElementById('kpi-clientes').textContent = totalAtivos;
-  document.getElementById('kpi-clientes-sub').textContent = comSaldo.length + ' com saldo devedor';
+  document.getElementById('kpi-clientes-sub').textContent = comSaldo.length+' com saldo devedor';
 
-  // Ticket médio
-  const contratos = ativos.map(r => parseBRL(r['Valor Contrato (R$)'])).filter(v => v);
+  const contratos = ativos.map(r => r[3]).filter(v => v && typeof v==='number');
   const ticketMedio = contratos.length ? contratos.reduce((a,b)=>a+b,0)/contratos.length : 0;
   document.getElementById('kpi-ticket').textContent = fmt(ticketMedio);
 
-  // Lista com saldo
   document.getElementById('tab-ativos').innerHTML = comSaldo.length
     ? comSaldo.map(r => {
-const saldo = saldoMap[r['Nome do Cliente']] || 0;
+        const saldo = saldoMap[r[1]] || 0;
         return `<div class="client-row">
-          <div class="client-avatar">${initials(r['Nome do Cliente'])}</div>
-          <span class="client-name">${r['Nome do Cliente']||'—'}</span>
-          <span class="client-prog">${r['Programa']||''}</span>
+          <div class="client-avatar">${initials(r[1])}</div>
+          <span class="client-name">${r[1]||'—'}</span>
+          <span class="client-prog">${r[2]||''}</span>
           <span class="client-saldo">${fmt(saldo)}</span>
         </div>`;
       }).join('')
     : '<p class="empty-msg">Nenhum cliente com saldo devedor.</p>';
 
-  // Lista quitados
   document.getElementById('tab-quitados').innerHTML = quitados.length
-    ? quitados.map(r => `
-        <div class="client-row">
-          <div class="client-avatar" style="background:var(--green-bg);color:var(--green)">${initials(r['Nome do Cliente'])}</div>
-          <span class="client-name">${r['Nome do Cliente']||'—'}</span>
-          <span class="client-prog">${r['Programa']||''}</span>
-          <span class="client-ok">✓ Quitado</span>
-        </div>`).join('')
+    ? quitados.map(r => `<div class="client-row">
+        <div class="client-avatar" style="background:var(--green-bg);color:var(--green)">${initials(r[1])}</div>
+        <span class="client-name">${r[1]||'—'}</span>
+        <span class="client-prog">${r[2]||''}</span>
+        <span class="client-ok">✓ Quitado</span>
+      </div>`).join('')
     : '<p class="empty-msg">Nenhum cliente quitado.</p>';
 
-  // Gráfico saldo horizontal
+  // Gráfico saldo devedor
   const saldoData = comSaldo
-    .map(r => ({ nome: r['Nome do Cliente'], saldo: parseBRL(r['Saldo Devedor (R$)'])||0 }))
+    .map(r => ({ nome: r[1], saldo: saldoMap[r[1]]||0 }))
     .filter(r => r.saldo > 0)
     .sort((a,b) => b.saldo - a.saldo);
 
-  const colors = ['#F87171','#F87171','#FB923C','#FB923C','#FBBF24','#FBBF24','#A3E635','#4ADE80'];
+  const colors = ['#F87171','#F87171','#FB923C','#FB923C','#FBBF24','#FBBF24','#A3E635','#4ADE80','#2DD4BF','#818CF8'];
   if (chartSaldo) chartSaldo.destroy();
   chartSaldo = new Chart(document.getElementById('chartSaldo'), {
-    type: 'bar',
-    data: {
-      labels: saldoData.map(r => r.nome),
-      datasets: [{ data: saldoData.map(r => r.saldo), backgroundColor: saldoData.map((_,i)=>colors[i]||'#9B87F5'), borderRadius:4, borderSkipped:false }]
-    },
-    options: {
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{
-        x:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88', callback:v=>fmtK(v)} },
-        y:{ grid:{display:false}, ticks:{color:'#B4B2A9'} }
-      }
-    }
+    type:'bar',
+    data:{ labels:saldoData.map(r=>r.nome), datasets:[{ data:saldoData.map(r=>r.saldo), backgroundColor:saldoData.map((_,i)=>colors[i]||'#9B87F5'), borderRadius:4, borderSkipped:false }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>fmtK(v)}}, y:{grid:{display:false},ticks:{color:'#B4B2A9'}} } }
   });
 
   // Gráfico pizza
   if (chartPie) chartPie.destroy();
-  const pizzaData = ativos.map(r => ({ nome: r['Nome do Cliente'], val: parseBRL(r['Valor Contrato (R$)'])||0 }));
+  const pizzaData = ativos.map(r => ({ nome:r[1], val:r[3]||0 }));
   chartPie = new Chart(document.getElementById('chartPie'), {
-    type: 'doughnut',
-    data: {
-      labels: pizzaData.map(r => r.nome),
-      datasets: [{ data: pizzaData.map(r => r.val), backgroundColor:['#9B87F5','#4ADE80','#F87171','#FBBF24','#2DD4BF','#818CF8','#FB923C','#6B7280','#A3E635','#E879F9'], borderColor:'#0D0C10', borderWidth:2 }]
-    },
-    options: { responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{ legend:{display:true, position:'right', labels:{font:{size:10}, color:'#7C7A88', boxWidth:8, padding:6}} } }
+    type:'doughnut',
+    data:{ labels:pizzaData.map(r=>r.nome), datasets:[{ data:pizzaData.map(r=>r.val), backgroundColor:['#9B87F5','#4ADE80','#F87171','#FBBF24','#2DD4BF','#818CF8','#FB923C','#6B7280','#A3E635','#E879F9','#38BDF8','#F472B6'], borderColor:'#0D0C10', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{display:true,position:'right',labels:{font:{size:10},color:'#7C7A88',boxWidth:8,padding:6}}} }
   });
 
   // Progress bars
   const metaAnual = PLANEJADO.reduce((a,b)=>a+b,0);
-const metaMes   = PLANEJADO[3] || 0;
-document.getElementById('progress-section').innerHTML = [
-  { label:'Meta do mês atingida (Abr)', val: REALIZADO[3]||0, total: metaMes||1, color:'#9B87F5' },
-  { label:'Meta anual atingida',        val: REALIZADO_ACUM,  total: metaAnual||1, color:'#4ADE80' },
-  { label:'Clientes meta (63)',         val: totalAtivos,      total: 63, color:'#2DD4BF' },
-].map(p => {
-  const w = Math.min(100, Math.round((p.val/p.total)*100));
-  return `<div class="progress-row">
-    <div class="progress-meta"><span>${p.label}</span><span>${w}%</span></div>
-    <div class="progress-track"><div class="progress-fill" style="width:0%;background:${p.color}" data-target="${w}%"></div></div>
-  </div>`;
-}).join('');
+  const mesAtual  = new Date().getMonth();
+  const metaMes   = PLANEJADO[mesAtual] || 0;
+  document.getElementById('progress-section').innerHTML = [
+    { label:'Meta do mês atingida',  val:REALIZADO[mesAtual]||0, total:metaMes||1,   color:'#9B87F5' },
+    { label:'Meta anual atingida',   val:REALIZADO_ACUM,         total:metaAnual||1, color:'#4ADE80' },
+    { label:'Clientes meta (63)',     val:totalAtivos,            total:63,           color:'#2DD4BF' },
+  ].map(p => {
+    const w = Math.min(100, Math.round((p.val/p.total)*100));
+    return `<div class="progress-row">
+      <div class="progress-meta"><span>${p.label}</span><span>${w}%</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:0%;background:${p.color}" data-target="${w}%"></div></div>
+    </div>`;
+  }).join('');
 
   setTimeout(() => {
-    document.querySelectorAll('.progress-fill[data-target]').forEach(el => {
-      el.style.width = el.dataset.target;
-    });
+    document.querySelectorAll('.progress-fill[data-target]').forEach(el => { el.style.width = el.dataset.target; });
   }, 200);
 }
 
@@ -706,22 +668,14 @@ document.getElementById('progress-section').innerHTML = [
 function renderAnual() {
   if (chartAnual) chartAnual.destroy();
   chartAnual = new Chart(document.getElementById('chartAnual'), {
-    data: {
-      labels: MESES_FULL,
-      datasets: [
-        { type:'bar', label:'Planejado', data:PLANEJADO, backgroundColor:'#2C2C2A', borderRadius:4 },
-        { type:'bar', label:'Realizado', data:REALIZADO, backgroundColor:'#4ADE80', borderRadius:4 },
-        { type:'line', label:'Projeção', data:[null,null,null,null,...REC_CONF], borderColor:'#9B87F5', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#9B87F5', fill:false, tension:.3 }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{
-        x:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88', autoSkip:false, maxRotation:0} },
-        y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88', callback:v=>v===0?'0':fmtK(v)} }
-      }
-    }
+    data:{ labels:MESES_FULL, datasets:[
+      { type:'bar',  label:'Planejado', data:PLANEJADO, backgroundColor:'#2C2C2A', borderRadius:4 },
+      { type:'bar',  label:'Realizado', data:REALIZADO, backgroundColor:'#4ADE80', borderRadius:4 },
+      { type:'line', label:'Projeção',  data:[null,null,null,null,...REC_CONF], borderColor:'#9B87F5', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#9B87F5', fill:false, tension:.3 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',autoSkip:false,maxRotation:0}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>v===0?'0':fmtK(v)}} } }
   });
 }
 
@@ -734,15 +688,16 @@ function setScenario(k) {
 }
 
 function renderProj() {
-  const s = SCENARIOS[currentKey];
+  const s    = SCENARIOS[currentKey];
   const rec  = buildRec(currentKey);
   const desp = buildDesp(currentKey);
-  const liq  = rec.map((r,i) => r - desp[i]);
+  const liq  = rec.map((r,i) => r-desp[i]);
   const totRec  = rec.reduce((a,b)=>a+b,0);
   const totDesp = desp.reduce((a,b)=>a+b,0);
-  const totLiq  = totRec - totDesp;
+  const totLiq  = totRec-totDesp;
   const totMeta = META_PROJ.reduce((a,b)=>a+b,0);
-  const totalAno = REALIZADO_ACUM + totRec;
+  const totalAno= REALIZADO_ACUM+totRec;
+  const metaAnual = PLANEJADO.reduce((a,b)=>a+b,0);
 
   document.getElementById('scenario-label-tbl').textContent = s.label.toLowerCase();
   document.getElementById('proj-sub').textContent = s.sub;
@@ -750,34 +705,24 @@ function renderProj() {
   const col = currentKey==='bull'?'#4ADE80':currentKey==='bear'?'#F87171':'#9B87F5';
 
   document.getElementById('proj-kpis').innerHTML = [
-    { label:'Receita proj. mai–dez', val:fmt(totRec),    sub:pct(totRec,totMeta)+' da meta período', cls:'' },
-    { label:'Total ano (real+proj)',  val:fmt(totalAno),  sub:pct(totalAno, PLANEJADO.reduce((a,b)=>a+b,0))+' da meta anual', cls:'' },
-    { label:'Resultado líquido',      val:fmt(totLiq),    sub:'receita – despesas', cls:totLiq>=0?'up':'down' },
-    { label:'Gap p/ meta mai–dez',    val:fmt(totMeta-totRec), sub:'falta fechar', cls:'down' },
-  ].map(k => `<div class="kpi-card ${currentKey==='bull'?'green':currentKey==='bear'?'red':'purple'}">
-    <div class="kpi-label">${k.label}</div>
-    <div class="kpi-value">${k.val}</div>
-    <div class="kpi-sub ${k.cls}">${k.sub}</div>
-  </div>`).join('');
+    { label:'Receita proj. mai–dez', val:fmt(totRec),         sub:pct(totRec,totMeta)+' da meta período',    cls:'' },
+    { label:'Total ano (real+proj)', val:fmt(totalAno),        sub:pct(totalAno,metaAnual)+' da meta anual', cls:'' },
+    { label:'Resultado líquido',     val:fmt(totLiq),          sub:'receita – despesas', cls:totLiq>=0?'up':'down' },
+    { label:'Gap p/ meta mai–dez',   val:fmt(totMeta-totRec),  sub:'falta fechar', cls:'down' },
+  ].map(k=>`<div class="kpi-card ${currentKey==='bull'?'green':currentKey==='bear'?'red':'purple'}">
+    <div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div>
+    <div class="kpi-sub ${k.cls}">${k.sub}</div></div>`).join('');
 
   if (chartProj) chartProj.destroy();
   chartProj = new Chart(document.getElementById('chartProj'), {
-    data: {
-      labels: MESES_PROJ,
-      datasets: [
-        { type:'bar', label:'Meta', data:META_PROJ, backgroundColor:'#2C2C2A', borderRadius:4 },
-        { type:'bar', label:'Cenário', data:rec, backgroundColor:col+'99', borderRadius:4 },
-        { type:'line', label:'Despesas', data:desp, borderColor:'#F87171', borderWidth:2, borderDash:[4,3], pointRadius:3, pointBackgroundColor:'#F87171', fill:false, tension:.2 }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{
-        x:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88'} },
-        y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88', callback:v=>v===0?'0':fmtK(v)} }
-      }
-    }
+    data:{ labels:MESES_PROJ, datasets:[
+      { type:'bar',  label:'Meta',    data:META_PROJ, backgroundColor:'#2C2C2A', borderRadius:4 },
+      { type:'bar',  label:'Cenário', data:rec,       backgroundColor:col+'99', borderRadius:4 },
+      { type:'line', label:'Desp',    data:desp, borderColor:'#F87171', borderWidth:2, borderDash:[4,3], pointRadius:3, pointBackgroundColor:'#F87171', fill:false, tension:.2 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88'}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>v===0?'0':fmtK(v)}} } }
   });
 
   const bR=buildRec('base'),bD=buildDesp('base');
@@ -794,26 +739,18 @@ function renderProj() {
   if (chartAcum) chartAcum.destroy();
   chartAcum = new Chart(document.getElementById('chartAcum'), {
     type:'line',
-    data: {
-      labels: MESES_PROJ,
-      datasets: [
-        { label:'Base', data:acBase, borderColor:'#9B87F5', borderWidth:2, pointRadius:3, fill:false, tension:.3 },
-        { label:'Otimista', data:acBull, borderColor:'#4ADE80', borderWidth:2, pointRadius:3, fill:false, tension:.3, borderDash:[6,3] },
-        { label:'Conservador', data:acBear, borderColor:'#F87171', borderWidth:2, pointRadius:3, fill:false, tension:.3, borderDash:[2,4] }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{
-        x:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88'} },
-        y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#7C7A88', callback:v=>fmtK(v)} }
-      }
-    }
+    data:{ labels:MESES_PROJ, datasets:[
+      { label:'Base',       data:acBase, borderColor:'#9B87F5', borderWidth:2, pointRadius:3, fill:false, tension:.3 },
+      { label:'Otimista',   data:acBull, borderColor:'#4ADE80', borderWidth:2, pointRadius:3, fill:false, tension:.3, borderDash:[6,3] },
+      { label:'Conservador',data:acBear, borderColor:'#F87171', borderWidth:2, pointRadius:3, fill:false, tension:.3, borderDash:[2,4] }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88'}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>fmtK(v)}} } }
   });
 
   const tbody = MESES_PROJ.map((m,i) => {
-    const liqV=liq[i]; const liqC=liqV>=0?'pos':'neg';
+    const liqV=liq[i], liqC=liqV>=0?'pos':'neg';
     const vs=META_PROJ[i]>0?pct(rec[i],META_PROJ[i]):'—';
     const tipo=i<2?'real':'proj';
     return `<tr><td>${m}/2026<span class="pill ${tipo}">${tipo==='real'?'confirmado':'projeção'}</span></td>
@@ -833,11 +770,10 @@ function renderProj() {
     const tR=r2.reduce((a,b)=>a+b,0),tD=d2.reduce((a,b)=>a+b,0),tL=tR-tD;
     let ac=CAIXA; r2.forEach((r,i)=>ac+=r-d2[i]);
     const mg=tR>0?(tL/tR*100).toFixed(1):'0.0';
-    const metaAnual=PLANEJADO.reduce((a,b)=>a+b,0);
     return `<div class="cmp-card ${k}">
       <div class="cmp-name">${SCENARIOS[k].label}</div>
       <div class="cmp-row"><span class="cmp-label">Receita mai–dez</span><span class="cmp-val">${fmt(tR)}</span></div>
-      <div class="cmp-row"><span class="cmp-label">% da meta período</span><span class="cmp-val ${tR/(META_PROJ.reduce((a,b)=>a+b,0)||1)>0.5?'pos':'neg'}">${pct(tR,META_PROJ.reduce((a,b)=>a+b,0))}</span></div>
+      <div class="cmp-row"><span class="cmp-label">% da meta período</span><span class="cmp-val ${tR/(totMeta||1)>0.5?'pos':'neg'}">${pct(tR,totMeta)}</span></div>
       <div class="cmp-row"><span class="cmp-label">Resultado líquido</span><span class="cmp-val ${tL>=0?'pos':'neg'}">${fmt(tL)}</span></div>
       <div class="cmp-row"><span class="cmp-label">Margem</span><span class="cmp-val">${mg}%</span></div>
       <div class="cmp-row"><span class="cmp-label">Saldo final out/26</span><span class="cmp-val ${ac>=0?'pos':'neg'}">${fmt(ac)}</span></div>
@@ -857,10 +793,15 @@ function showTab(t) {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 async function init() {
   setStatus('Carregando...', false);
-  const now = new Date();
+  const now   = new Date();
   const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  document.getElementById('periodo').textContent = meses[now.getMonth()] + ' ' + now.getFullYear();
-  document.getElementById('footer-data').textContent = now.toLocaleDateString('pt-BR') + ' · ' + meses[now.getMonth()];
+  document.getElementById('periodo').textContent     = meses[now.getMonth()]+' '+now.getFullYear();
+  document.getElementById('footer-data').textContent = now.toLocaleDateString('pt-BR')+' · '+meses[now.getMonth()];
+
+  // Pré-seleciona mês atual no seletor
+  const sel = document.getElementById('mes-selector');
+  if (sel) sel.value = meses[now.getMonth()] || 'Abril';
+  sel?.addEventListener('change', atualizarKpisMes);
 
   try {
     await Promise.all([loadForecast(), loadReceber(), loadPagar(), loadExtrato(), loadClientes()]);
@@ -868,12 +809,13 @@ async function init() {
     renderProj();
     setStatus('Dados atualizados', true);
   } catch(e) {
-    console.error('Erro ao carregar dados:', e);
+    console.error('Erro:', e);
     setStatus('Erro ao carregar — verifique se a planilha está publicada', false);
   }
 }
-document.getElementById('mes-selector')?.addEventListener('change', atualizarKpisMes);
+
 init();
 </script>
 </body>
 </html>
+
