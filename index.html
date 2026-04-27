@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BL Mentoring — Painel Financeiro 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:#0D0C10;--surface:#16141A;--surface2:#1E1B24;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#F0EEF5;--muted:#7C7A88;--muted2:#4A4858;
+    --purple:#9B87F5;--purple-d:#6D5BD0;--purple-bg:rgba(155,135,245,0.10);
+    --green:#4ADE80;--green-d:#166534;--green-bg:rgba(74,222,128,0.10);
+    --red:#F87171;--red-d:#7F1D1D;--red-bg:rgba(248,113,113,0.10);
+    --amber:#FBBF24;--amber-bg:rgba(251,191,36,0.10);
+    --teal:#2DD4BF;--teal-bg:rgba(45,212,191,0.10);
+    --radius:12px;--radius-sm:8px;--radius-pill:999px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+  .shell{display:flex;min-height:100vh}
+  .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:28px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .logo{padding:0 24px 28px;border-bottom:1px solid var(--border);margin-bottom:20px}
+  .logo-mark{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--text);letter-spacing:-.02em}
+  .logo-sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.04em;text-transform:uppercase}
+  .nav{padding:0 12px;flex:1}
+  .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);padding:0 12px;margin:16px 0 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-sm);color:var(--muted);font-size:13px;cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+  .nav-item:hover{background:var(--surface2);color:var(--text)}
+  .nav-item.active{background:var(--purple-bg);color:var(--purple)}
+  .nav-item .icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
+  .nav-item.active .icon{opacity:1}
+  .sidebar-footer{padding:16px 24px 0;border-top:1px solid var(--border);font-size:11px;color:var(--muted2)}
+  .sidebar-footer strong{color:var(--muted);display:block;font-weight:500}
+  .main{flex:1;padding:32px 36px;overflow-x:hidden}
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap}
+  .page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1.2}
+  .page-sub{font-size:13px;color:var(--muted);margin-top:4px}
+  .header-pill{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-pill);font-size:12px;color:var(--muted)}
+  .header-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .section{margin-bottom:32px;animation:fadeIn .35s ease both}
+  .section:nth-child(2){animation-delay:.05s}.section:nth-child(3){animation-delay:.1s}.section:nth-child(4){animation-delay:.15s}.section:nth-child(5){animation-delay:.2s}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .section-line{flex:1;height:1px;background:var(--border)}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
+  .kpi-card:hover{border-color:var(--border2)}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+  .kpi-card.purple::before{background:var(--purple)}.kpi-card.green::before{background:var(--green)}.kpi-card.red::before{background:var(--red)}.kpi-card.amber::before{background:var(--amber)}.kpi-card.teal::before{background:var(--teal)}
+  .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .kpi-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1}
+  .kpi-sub{font-size:11px;color:var(--muted);margin-top:6px}
+  .kpi-sub.up{color:var(--green)}.kpi-sub.down{color:var(--red)}
+  .mes-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;grid-column:1/-1;border-top:2px solid var(--teal)}
+  .mes-card-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .mes-select{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 12px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer}
+  .mes-kpis{display:flex;gap:24px;flex-wrap:wrap}
+  .mes-kpi{min-width:120px}
+  .mes-divider{width:1px;background:var(--border);align-self:stretch}
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .charts-grid.triple{grid-template-columns:2fr 1fr}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px}
+  .chart-card.span2{grid-column:1/-1}
+  .chart-card-header{margin-bottom:16px}
+  .chart-card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
+  .chart-card-sub{font-size:11px;color:var(--muted);margin-top:3px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+  .legend-sq{width:10px;height:10px;border-radius:2px}
+  .legend-ln{width:16px;height:2px;border-radius:2px}
+  .scenario-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .stab{padding:6px 16px;border-radius:var(--radius-pill);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .15s;font-family:'DM Sans',sans-serif}
+  .stab.base.active{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-d)}
+  .stab.bull.active{background:var(--green-bg);color:var(--green);border-color:var(--green-d)}
+  .stab.bear.active{background:var(--red-bg);color:var(--red);border-color:var(--red-d)}
+  .alert-box{background:var(--red-bg);border:1px solid rgba(248,113,113,0.2);border-left:3px solid var(--red);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:12px 16px;font-size:12px;color:#fca5a5;margin-bottom:14px}
+  .alert-box strong{font-weight:500;color:var(--red)}
+  .venc-list{display:flex;flex-direction:column;gap:7px}
+  .venc-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;background:var(--surface2)}
+  .venc-date{font-weight:500;min-width:48px;font-family:'Syne',sans-serif;font-size:12px}
+  .venc-name{flex:1;color:var(--muted)}
+  .venc-val{font-weight:500}
+  .venc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .venc-dot.green{background:var(--green)}.venc-dot.amber{background:var(--amber)}.venc-dot.red{background:var(--red)}
+  .client-list{display:flex;flex-direction:column;gap:0}
+  .client-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px}
+  .client-row:last-child{border-bottom:none}
+  .client-avatar{width:30px;height:30px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--purple);flex-shrink:0;font-family:'Syne',sans-serif}
+  .client-name{font-weight:500;min-width:130px;color:var(--text)}
+  .client-prog{color:var(--muted);flex:1;font-size:11px}
+  .client-saldo{font-weight:500;color:var(--red)}
+  .client-ok{font-weight:500;color:var(--green);font-size:11px}
+  .data-table{width:100%;border-collapse:collapse;font-size:12px}
+  .data-table th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);text-align:right;padding:8px 10px;border-bottom:1px solid var(--border)}
+  .data-table th:first-child{text-align:left}
+  .data-table td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--border);color:var(--muted)}
+  .data-table td:first-child{text-align:left;font-weight:500;color:var(--text)}
+  .data-table tbody tr:hover td{background:var(--surface2)}
+  .data-table .foot-row td{color:var(--text);font-weight:500;background:var(--surface2);border-bottom:none}
+  .data-table .pos{color:var(--green)!important}.data-table .neg{color:var(--red)!important}
+  .pill{display:inline-block;padding:1px 7px;border-radius:var(--radius-pill);font-size:10px;font-weight:500;margin-left:6px}
+  .pill.real{background:var(--green-bg);color:var(--green)}.pill.proj{background:var(--purple-bg);color:var(--purple)}
+  .cmp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .cmp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+  .cmp-card.base{border-top:2px solid var(--purple)}.cmp-card.bull{border-top:2px solid var(--green)}.cmp-card.bear{border-top:2px solid var(--red)}
+  .cmp-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:12px}
+  .cmp-row{display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--border)}
+  .cmp-row:last-child{border-bottom:none}
+  .cmp-label{color:var(--muted)}.cmp-val{font-weight:500;color:var(--text)}
+  .cmp-val.pos{color:var(--green)}.cmp-val.neg{color:var(--red)}
+  .progress-row{margin-bottom:12px}
+  .progress-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
+  .progress-track{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+  .progress-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+  .tab-bar{display:flex;gap:4px;margin-bottom:14px}
+  .tab-btn{padding:5px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .15s}
+  .tab-btn.active{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+  .empty-msg{font-size:12px;color:var(--muted);padding:8px 0}
+  .pos{color:var(--green)}.neg{color:var(--red)}
+  @media(max-width:900px){.sidebar{display:none}.main{padding:20px 18px}.charts-grid,.charts-grid.triple{grid-template-columns:1fr}.chart-card.span2{grid-column:1}.kpi-grid{grid-template-columns:1fr 1fr}.cmp-grid{grid-template-columns:1fr}.mes-kpis{gap:12px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">BL Mentoring</div>
+      <div class="logo-sub">Painel Financeiro</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Visão Geral</div>
+      <button class="nav-item active">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12L6 8l3 3 5-7"/></svg>
+        Forecast
+      </button>
+      <div class="nav-label">Financeiro</div>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/><circle cx="8" cy="8" r="6"/></svg>A Receber</button>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 4l-4 4 4 4"/><circle cx="8" cy="8" r="6"/></svg>A Pagar</button>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 7h12"/><path d="M6 7v6"/></svg>Extrato</button>
+      <div class="nav-label">Clientes</div>
+      <button class="nav-item"><svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5"/></svg>Cadastro</button>
+    </nav>
+    <div class="sidebar-footer">
+      <strong>Atualizado em</strong>
+      <span id="footer-data">carregando...</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Painel Executivo</div>
+        <div class="page-sub">BL Mentoring &amp; Consulting · <span id="periodo">carregando...</span></div>
+      </div>
+      <div class="header-pill"><span class="dot"></span><span id="status-text">Carregando...</span></div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Visão Geral</span><div class="section-line"></div></div>
+      <div class="kpi-grid">
+        <div class="kpi-card purple"><div class="kpi-label">Saldo atual (caixa)</div><div class="kpi-value" id="kpi-saldo">—</div><div class="kpi-sub" id="kpi-saldo-sub">—</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Recebido no mês</div><div class="kpi-value" id="kpi-recebido">—</div><div class="kpi-sub" id="kpi-recebido-sub">—</div></div>
+        <div class="kpi-card amber"><div class="kpi-label">A receber (pendente)</div><div class="kpi-value" id="kpi-areceber">—</div><div class="kpi-sub" id="kpi-areceber-sub">—</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Total a pagar</div><div class="kpi-value" id="kpi-apagar">—</div><div class="kpi-sub" id="kpi-apagar-sub">—</div></div>
+        <div class="kpi-card teal"><div class="kpi-label">Clientes ativos</div><div class="kpi-value" id="kpi-clientes">—</div><div class="kpi-sub" id="kpi-clientes-sub">—</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Ticket médio</div><div class="kpi-value" id="kpi-ticket">—</div><div class="kpi-sub" id="kpi-ticket-sub">—</div></div>
+        <!-- Card de mês selecionável -->
+        <div class="mes-card">
+          <div class="mes-card-inner">
+            <div>
+              <div class="kpi-label">Visão por mês</div>
+              <select id="mes-selector" class="mes-select">
+                <option value="Janeiro">Janeiro</option>
+                <option value="Fevereiro">Fevereiro</option>
+                <option value="Março">Março</option>
+                <option value="Abril" selected>Abril</option>
+                <option value="Maio">Maio</option>
+                <option value="Junho">Junho</option>
+                <option value="Julho">Julho</option>
+                <option value="Agosto">Agosto</option>
+                <option value="Setembro">Setembro</option>
+                <option value="Outubro">Outubro</option>
+                <option value="Novembro">Novembro</option>
+                <option value="Dezembro">Dezembro</option>
+              </select>
+            </div>
+            <div class="mes-kpis">
+              <div class="mes-kpi">
+                <div class="kpi-label">A receber no mês</div>
+                <div class="kpi-value pos" id="kpi-receber-mes">—</div>
+                <div class="kpi-sub" id="kpi-receber-mes-sub">—</div>
+              </div>
+              <div class="mes-divider"></div>
+              <div class="mes-kpi">
+                <div class="kpi-label">A pagar no mês</div>
+                <div class="kpi-value" style="color:var(--amber)" id="kpi-pagar-mes">—</div>
+                <div class="kpi-sub" id="kpi-pagar-mes-sub">—</div>
+              </div>
+              <div class="mes-divider"></div>
+              <div class="mes-kpi">
+                <div class="kpi-label">Resultado do mês</div>
+                <div class="kpi-value" id="kpi-resultado-mes">—</div>
+                <div class="kpi-sub" id="kpi-resultado-mes-sub">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receita 2026 -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Receita 2026</span><div class="section-line"></div></div>
+      <div class="charts-grid">
+        <div class="chart-card span2">
+          <div class="chart-card-header"><div class="chart-card-title">Planejado × Realizado × Projeção</div><div class="chart-card-sub">Receita mensal 2026 (R$)</div></div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-sq" style="background:#4A4858"></span>Planejado</span>
+            <span class="legend-item"><span class="legend-sq" style="background:#4ADE80"></span>Realizado</span>
+            <span class="legend-item"><span class="legend-sq" style="background:#9B87F5;opacity:.7"></span>Projeção confirmada</span>
+          </div>
+          <div style="position:relative;height:240px"><canvas id="chartAnual"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atingimento -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Atingimento</span><div class="section-line"></div></div>
+      <div class="charts-grid triple">
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-card-title">Progresso de metas</div><div class="chart-card-sub" id="meta-anual-sub">Meta anual —</div></div>
+          <div id="progress-section"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-card-title">Carteira por cliente</div><div class="chart-card-sub">Receita total contratada</div></div>
+          <div style="position:relative;height:180px"><canvas id="chartPie"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vencimentos -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Próximos Vencimentos</span><div class="section-line"></div></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-card-title">A receber</div><div class="chart-card-sub">Próximas parcelas pendentes</div></div>
+          <div id="venc-receber" class="venc-list"><p class="empty-msg">Carregando...</p></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-card-title">A pagar</div><div class="chart-card-sub">Saídas programadas</div></div>
+          <div id="venc-pagar" class="venc-list"><p class="empty-msg">Carregando...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forecast -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Forecast — Mai a Dez 2026</span><div class="section-line"></div></div>
+      <div class="alert-box" id="alert-gap"></div>
+      <div class="scenario-tabs">
+        <button class="stab base active" onclick="setScenario('base')">Base — parcelas confirmadas</button>
+        <button class="stab bull" onclick="setScenario('bull')">Otimista — novos clientes</button>
+        <button class="stab bear" onclick="setScenario('bear')">Conservador — 20% risco</button>
+      </div>
+      <div class="kpi-grid" id="proj-kpis" style="margin-bottom:14px"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-card-title">Meta × Cenário × Despesas</div><div class="chart-card-sub" id="proj-sub">—</div></div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-sq" style="background:#4A4858"></span>Meta original</span>
+            <span class="legend-item"><span class="legend-sq" style="background:#9B87F5"></span>Cenário</span>
+            <span class="legend-item"><span class="legend-ln" style="background:var(--red)"></span>Despesas</span>
+          </div>
+          <div style="position:relative;height:220px"><canvas id="chartProj"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-card-title">Saldo acumulado projetado</div><div class="chart-card-sub">3 cenários comparados</div></div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-ln" style="background:var(--purple)"></span>Base</span>
+            <span class="legend-item"><span class="legend-ln" style="background:var(--green)"></span>Otimista</span>
+            <span class="legend-item"><span class="legend-ln" style="background:var(--red)"></span>Conservador</span>
+          </div>
+          <div style="position:relative;height:220px"><canvas id="chartAcum"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-top:14px">
+        <div class="chart-card-header"><div class="chart-card-title">Detalhamento mensal — <span id="scenario-label-tbl" style="color:var(--purple)">base</span></div></div>
+        <table class="data-table" id="proj-table"></table>
+      </div>
+      <div style="margin-top:14px">
+        <div class="section-header" style="margin-bottom:12px"><span class="section-title">Comparativo dos 3 cenários</span><div class="section-line"></div></div>
+        <div class="cmp-grid" id="cmp-grid"></div>
+      </div>
+    </div>
+
+    <!-- Clientes -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Saldo Devedor por Cliente</span><div class="section-line"></div></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="tab-bar">
+            <button class="tab-btn active" onclick="showTab('ativos')">Com saldo devedor</button>
+            <button class="tab-btn" onclick="showTab('quitados')">Quitados</button>
+          </div>
+          <div id="tab-ativos" class="client-list"><p class="empty-msg">Carregando...</p></div>
+          <div id="tab-quitados" style="display:none" class="client-list"><p class="empty-msg">Carregando...</p></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header"><div class="chart-card-title">Saldo devedor por cliente</div><div class="chart-card-sub">Maiores exposições</div></div>
+          <div style="position:relative;height:280px"><canvas id="chartSaldo"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const SHEET_ID = '1Ju6KlvDIW6xAiBJlkkKcPyRs5N9Q_NbfGzP68MAwQeg';
+const ABAS = {
+  forecast: '🎯 Forecast',
+  receber:  '💰 Contas a Receber',
+  pagar:    '💸 Contas a Pagar',
+  extrato:  '🏦 Controle Financeiro',
+  clientes: '📋 Cadastro Clientes',
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+async function fetchSheet(aba) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(aba)}`;
+  const res  = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+  return json.table;
+}
+function rawRows(t) {
+  return t.rows.map(r => r.c.map(c => c?.v ?? null));
+}
+function parseBRL(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'number') return v;
+  return parseFloat(String(v).replace(/[R$\s.]/g,'').replace(',','.')) || null;
+}
+function fmt(v) {
+  if (v === null || v === undefined) return '—';
+  const a = Math.abs(Math.round(v));
+  const s = 'R$ ' + a.toLocaleString('pt-BR');
+  return v < 0 ? '(' + s + ')' : s;
+}
+function fmtK(v) {
+  if (v === 0) return '0';
+  const a = Math.abs(Math.round(v/1000));
+  return (v < 0 ? '-' : '') + 'R$' + a + 'k';
+}
+function pct(a,b) { return (!b) ? '—' : (a/b*100).toFixed(1)+'%'; }
+function initials(nome) {
+  if (!nome) return '?';
+  const p = String(nome).trim().split(' ');
+  return (p[0][0]+(p[1]?.[0]||'')).toUpperCase();
+}
+function setStatus(msg, ok) {
+  document.getElementById('status-text').textContent = msg;
+  document.querySelector('.header-pill .dot').style.background = ok ? 'var(--green)' : 'var(--amber)';
+}
+function formatDate(v) {
+  if (!v) return '—';
+  const s = String(v);
+  const m = s.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (m) {
+    const d = new Date(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]));
+    return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  }
+  if (s.match(/\d{2}\/\d{2}\/\d{4}/)) return s.slice(0,5);
+  return s.slice(0,5);
+}
+function isDataRow(v) {
+  if (v === null || v === undefined) return false;
+  const s = String(v);
+  return s.match(/Date\(/) || s.match(/^\d{2}\/\d{2}\/\d{4}$/);
+}
+
+Chart.defaults.color = '#7C7A88';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+// ─── ESTADO GLOBAL ────────────────────────────────────────────────────────────
+let PLANEJADO = [];
+let REALIZADO = [];
+let REC_CONF  = [];
+let META_PROJ = [];
+let DESPESAS  = [];
+let CAIXA     = 0;
+let REALIZADO_ACUM = 0;
+let ALL_RECEBER_ROWS = [];
+let ALL_PAGAR_ROWS   = [];
+
+const MESES_FULL     = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_PROJ     = ['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_NOME     = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES_PROJ_NOME= ['Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+const SCENARIOS = {
+  base: { label:'Base',       sub:'Parcelas já lançadas no cronograma — sem novos clientes', fn:(r)=>r,                              despExtra:0    },
+  bull: { label:'Otimista',   sub:'2 novos clientes em Mai e Jun (ticket R$ 14.400)',         fn:(r,i)=>Math.round(r+(i<2?28800:0)), despExtra:0    },
+  bear: { label:'Conservador',sub:'20% de inadimplência + R$ 1.500 extra/mês em despesas',   fn:(r)=>Math.round(r*0.8),             despExtra:1500 },
+};
+
+function buildRec(k) { return REC_CONF.map((r,i) => SCENARIOS[k].fn(r,i)); }
+function buildDesp(k) { return DESPESAS.map(d => d + (SCENARIOS[k].despExtra||0)); }
+
+let chartAnual=null, chartPie=null, chartProj=null, chartAcum=null, chartSaldo=null;
+let currentKey = 'base';
+
+// ─── KPIs POR MÊS ────────────────────────────────────────────────────────────
+function atualizarKpisMes() {
+  const mes = document.getElementById('mes-selector')?.value;
+  if (!mes) return;
+
+  const recMes = ALL_RECEBER_ROWS
+    .filter(r => r[1] === mes)
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const recPendente = ALL_RECEBER_ROWS
+    .filter(r => r[1] === mes && r[7] === 'A RECEBER')
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const pagMes = ALL_PAGAR_ROWS
+    .filter(r => r[1] === mes)
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const pagPendente = ALL_PAGAR_ROWS
+    .filter(r => r[1] === mes && r[7] === 'A PAGAR')
+    .reduce((s,r) => s+(r[5]||0), 0);
+
+  const resultado = recMes - pagMes;
+
+  document.getElementById('kpi-receber-mes').textContent = fmt(recMes);
+  document.getElementById('kpi-receber-mes-sub').textContent = fmt(recPendente)+' pendente';
+  document.getElementById('kpi-pagar-mes').textContent = fmt(pagMes);
+  document.getElementById('kpi-pagar-mes-sub').textContent = fmt(pagPendente)+' a pagar';
+
+  const elRes = document.getElementById('kpi-resultado-mes');
+  elRes.textContent = fmt(resultado);
+  elRes.className = 'kpi-value ' + (resultado >= 0 ? 'pos' : 'neg');
+  document.getElementById('kpi-resultado-mes-sub').textContent = resultado >= 0 ? 'superávit' : 'déficit';
+}
+
+// ─── LOADERS ─────────────────────────────────────────────────────────────────
+async function loadForecast() {
+  const t = await fetchSheet(ABAS.forecast);
+  const rows = rawRows(t);
+  const dataRows = rows.filter(r => r[0] && MESES_NOME.includes(String(r[0])));
+
+  const mesMap = {};
+  dataRows.forEach(r => { mesMap[String(r[0])] = r; });
+
+  PLANEJADO      = MESES_NOME.map(m => mesMap[m]?.[1] ?? 0);
+  REALIZADO      = MESES_NOME.map(m => mesMap[m]?.[2] ?? null);
+  META_PROJ      = MESES_PROJ_NOME.map(m => mesMap[m]?.[1] ?? 0);
+  REALIZADO_ACUM = REALIZADO.filter(v => v !== null).reduce((a,b) => a+b, 0);
+
+  const metaAnual = PLANEJADO.reduce((a,b) => a+b, 0);
+  document.getElementById('meta-anual-sub').textContent = 'Meta anual ' + fmt(metaAnual);
+
+  const planned4 = PLANEJADO.slice(0,4).reduce((a,b)=>a+b,0);
+  document.getElementById('alert-gap').innerHTML =
+    `<strong>Gap com a meta:</strong> Planejado acumulado até abril = ${fmt(planned4)} · Realizado = ${fmt(REALIZADO_ACUM)} (${pct(REALIZADO_ACUM,planned4)}). Julho e Agosto têm zero receita confirmada contra despesas fixas mensais.`;
+}
+
+async function loadReceber() {
+  const t = await fetchSheet(ABAS.receber);
+  const rows = rawRows(t).filter(r => isDataRow(r[0]));
+  ALL_RECEBER_ROWS = rows;
+
+  // cols: 0=Data, 1=MêsRef, 2=Cliente, 3=Desc, 4=Tipo, 5=Valor, 6=Forma, 7=Status
+  const totalGeral    = rows.reduce((s,r) => s+(r[5]||0), 0);
+  const totalRecebido = rows.filter(r=>r[7]==='RECEBIDO').reduce((s,r)=>s+(r[5]||0),0);
+  const totalAReceber = rows.filter(r=>r[7]==='A RECEBER').reduce((s,r)=>s+(r[5]||0),0);
+  const nPendentes    = rows.filter(r=>r[7]==='A RECEBER').length;
+
+  document.getElementById('kpi-recebido').textContent = fmt(totalRecebido);
+  document.getElementById('kpi-recebido-sub').textContent = pct(totalRecebido,totalGeral)+' do total';
+  document.getElementById('kpi-areceber').textContent = fmt(totalAReceber);
+  document.getElementById('kpi-areceber-sub').textContent = nPendentes+' parcelas em aberto';
+
+  const rcbMap = {};
+  rows.forEach(r => {
+    const m=r[1], v=r[5], s=r[7];
+    if (m&&v&&(s==='A RECEBER'||s==='RECEBIDO')) rcbMap[m]=(rcbMap[m]||0)+v;
+  });
+  REC_CONF = MESES_PROJ_NOME.map(m => rcbMap[m]||0);
+
+  const pendentes = rows
+    .filter(r => r[7]==='A RECEBER')
+    .sort((a,b) => {
+      const parseD = v => { const m=String(v).match(/Date\((\d+),(\d+),(\d+)\)/); return m?new Date(+m[1],+m[2],+m[3]):new Date(String(v).split('/').reverse().join('-')); };
+      return parseD(a[0]) - parseD(b[0]);
+    })
+    .slice(0,6);
+
+  document.getElementById('venc-receber').innerHTML = pendentes.length
+    ? pendentes.map(r => `<div class="venc-item"><span class="venc-dot green"></span><span class="venc-date">${formatDate(r[0])}</span><span class="venc-name">${r[2]||'—'}</span><span class="venc-val" style="color:var(--green)">${fmt(r[5])}</span></div>`).join('')
+    : '<p class="empty-msg">Nenhum recebimento pendente.</p>';
+
+  atualizarKpisMes();
+}
+
+async function loadPagar() {
+  const t = await fetchSheet(ABAS.pagar);
+  const rows = rawRows(t).filter(r => isDataRow(r[0]));
+  ALL_PAGAR_ROWS = rows;
+
+  // cols: 0=DataVencto, 1=MêsRef, 2=Desc, 3=Fornecedor, 4=Categoria, 5=Valor, 6=Parcela, 7=Status
+  const totalAPagar = rows.filter(r=>r[7]==='A PAGAR').reduce((s,r)=>s+(r[5]||0),0);
+  document.getElementById('kpi-apagar').textContent = fmt(totalAPagar);
+  document.getElementById('kpi-apagar-sub').textContent = 'compromissos futuros';
+
+  const pagMap = {};
+  rows.forEach(r => {
+    const m=r[1], v=r[5], s=r[7];
+    if (m&&v&&s==='A PAGAR') pagMap[m]=(pagMap[m]||0)+v;
+  });
+  DESPESAS = MESES_PROJ_NOME.map(m => pagMap[m]||0);
+
+  const apagar = rows
+    .filter(r => r[7]==='A PAGAR')
+    .sort((a,b) => {
+      const parseD = v => { const m=String(v).match(/Date\((\d+),(\d+),(\d+)\)/); return m?new Date(+m[1],+m[2],+m[3]):new Date(String(v).split('/').reverse().join('-')); };
+      return parseD(a[0]) - parseD(b[0]);
+    })
+    .slice(0,6);
+
+  document.getElementById('venc-pagar').innerHTML = apagar.length
+    ? apagar.map(r => {
+        const cor = r[4]==='Investimento Pessoal' ? 'red' : 'amber';
+        return `<div class="venc-item"><span class="venc-dot ${cor}"></span><span class="venc-date">${formatDate(r[0])}</span><span class="venc-name">${r[2]||'—'}</span><span class="venc-val" style="color:var(--${cor})">${fmt(r[5])}</span></div>`;
+      }).join('')
+    : '<p class="empty-msg">Nenhum pagamento pendente.</p>';
+
+  atualizarKpisMes();
+}
+
+async function loadExtrato() {
+  const t = await fetchSheet(ABAS.extrato);
+  const rows = rawRows(t);
+  // Saldo inicial = primeira linha que tem valor na col 4 mas não tem data
+  const saldoInicial = rows[0]?.[4] || 0;
+  // Linhas com data real
+  const dataRows = rows.filter(r => isDataRow(r[0]));
+  const comSaldo = dataRows.filter(r => r[7] !== null && r[7] !== undefined);
+  CAIXA = comSaldo.length ? (comSaldo[comSaldo.length-1][7] || 0) : saldoInicial;
+
+  document.getElementById('kpi-saldo').textContent = fmt(CAIXA);
+  document.getElementById('kpi-saldo-sub').innerHTML = CAIXA < saldoInicial
+    ? `<span class="down">▼ vs ${fmt(saldoInicial)} inicial</span>`
+    : `<span class="up">▲ vs ${fmt(saldoInicial)} inicial</span>`;
+}
+
+async function loadClientes() {
+  const [tCli, tRcb] = await Promise.all([
+    fetchSheet(ABAS.clientes),
+    fetchSheet(ABAS.receber)
+  ]);
+
+  // Calcula saldo devedor somando A RECEBER por cliente
+  const rcbRows = rawRows(tRcb).filter(r => isDataRow(r[0]));
+  const saldoMap = {};
+  rcbRows.filter(r => r[7]==='A RECEBER').forEach(r => {
+    const cli = r[2];
+    if (cli) saldoMap[cli] = (saldoMap[cli]||0) + (r[5]||0);
+  });
+
+  // Clientes — lê por posição para evitar problema de cabeçalho
+  // cols: 0=#, 1=Nome, 2=Programa, 3=ValorContrato, 4=NSessoes, 5=QtdParcelas, 6=ValorParcela, 7=DataInicio, 8=DataFim, 9=Status, 10=Quitado
+  const cliRows = rawRows(tCli).filter(r => r[1] && typeof r[1]==='string' && !r[1].includes('CADASTRO') && !r[1].includes('Nome') && !r[1].includes('Preencha') && !r[1].includes('TOTAL'));
+
+  const ativos   = cliRows.filter(r => r[9]==='Ativo');
+  const comSaldo = ativos.filter(r => r[10]==='Não');
+  const quitados = cliRows.filter(r => r[10]==='Sim');
+
+  const totalAtivos = ativos.length;
+  document.getElementById('kpi-clientes').textContent = totalAtivos;
+  document.getElementById('kpi-clientes-sub').textContent = comSaldo.length+' com saldo devedor';
+
+  const contratos = ativos.map(r => r[3]).filter(v => v && typeof v==='number');
+  const ticketMedio = contratos.length ? contratos.reduce((a,b)=>a+b,0)/contratos.length : 0;
+  document.getElementById('kpi-ticket').textContent = fmt(ticketMedio);
+
+  document.getElementById('tab-ativos').innerHTML = comSaldo.length
+    ? comSaldo.map(r => {
+        const saldo = saldoMap[r[1]] || 0;
+        return `<div class="client-row">
+          <div class="client-avatar">${initials(r[1])}</div>
+          <span class="client-name">${r[1]||'—'}</span>
+          <span class="client-prog">${r[2]||''}</span>
+          <span class="client-saldo">${fmt(saldo)}</span>
+        </div>`;
+      }).join('')
+    : '<p class="empty-msg">Nenhum cliente com saldo devedor.</p>';
+
+  document.getElementById('tab-quitados').innerHTML = quitados.length
+    ? quitados.map(r => `<div class="client-row">
+        <div class="client-avatar" style="background:var(--green-bg);color:var(--green)">${initials(r[1])}</div>
+        <span class="client-name">${r[1]||'—'}</span>
+        <span class="client-prog">${r[2]||''}</span>
+        <span class="client-ok">✓ Quitado</span>
+      </div>`).join('')
+    : '<p class="empty-msg">Nenhum cliente quitado.</p>';
+
+  // Gráfico saldo devedor
+  const saldoData = comSaldo
+    .map(r => ({ nome: r[1], saldo: saldoMap[r[1]]||0 }))
+    .filter(r => r.saldo > 0)
+    .sort((a,b) => b.saldo - a.saldo);
+
+  const colors = ['#F87171','#F87171','#FB923C','#FB923C','#FBBF24','#FBBF24','#A3E635','#4ADE80','#2DD4BF','#818CF8'];
+  if (chartSaldo) chartSaldo.destroy();
+  chartSaldo = new Chart(document.getElementById('chartSaldo'), {
+    type:'bar',
+    data:{ labels:saldoData.map(r=>r.nome), datasets:[{ data:saldoData.map(r=>r.saldo), backgroundColor:saldoData.map((_,i)=>colors[i]||'#9B87F5'), borderRadius:4, borderSkipped:false }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>fmtK(v)}}, y:{grid:{display:false},ticks:{color:'#B4B2A9'}} } }
+  });
+
+  // Gráfico pizza
+  if (chartPie) chartPie.destroy();
+  const pizzaData = ativos.map(r => ({ nome:r[1], val:r[3]||0 }));
+  chartPie = new Chart(document.getElementById('chartPie'), {
+    type:'doughnut',
+    data:{ labels:pizzaData.map(r=>r.nome), datasets:[{ data:pizzaData.map(r=>r.val), backgroundColor:['#9B87F5','#4ADE80','#F87171','#FBBF24','#2DD4BF','#818CF8','#FB923C','#6B7280','#A3E635','#E879F9','#38BDF8','#F472B6'], borderColor:'#0D0C10', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{display:true,position:'right',labels:{font:{size:10},color:'#7C7A88',boxWidth:8,padding:6}}} }
+  });
+
+  // Progress bars
+  const metaAnual = PLANEJADO.reduce((a,b)=>a+b,0);
+  const mesAtual  = new Date().getMonth();
+  const metaMes   = PLANEJADO[mesAtual] || 0;
+  document.getElementById('progress-section').innerHTML = [
+    { label:'Meta do mês atingida',  val:REALIZADO[mesAtual]||0, total:metaMes||1,   color:'#9B87F5' },
+    { label:'Meta anual atingida',   val:REALIZADO_ACUM,         total:metaAnual||1, color:'#4ADE80' },
+    { label:'Clientes meta (63)',     val:totalAtivos,            total:63,           color:'#2DD4BF' },
+  ].map(p => {
+    const w = Math.min(100, Math.round((p.val/p.total)*100));
+    return `<div class="progress-row">
+      <div class="progress-meta"><span>${p.label}</span><span>${w}%</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:0%;background:${p.color}" data-target="${w}%"></div></div>
+    </div>`;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.progress-fill[data-target]').forEach(el => { el.style.width = el.dataset.target; });
+  }, 200);
+}
+
+// ─── GRÁFICOS ─────────────────────────────────────────────────────────────────
+function renderAnual() {
+  if (chartAnual) chartAnual.destroy();
+  chartAnual = new Chart(document.getElementById('chartAnual'), {
+    data:{ labels:MESES_FULL, datasets:[
+      { type:'bar',  label:'Planejado', data:PLANEJADO, backgroundColor:'#2C2C2A', borderRadius:4 },
+      { type:'bar',  label:'Realizado', data:REALIZADO, backgroundColor:'#4ADE80', borderRadius:4 },
+      { type:'line', label:'Projeção',  data:[null,null,null,null,...REC_CONF], borderColor:'#9B87F5', borderWidth:2, borderDash:[5,4], pointRadius:3, pointBackgroundColor:'#9B87F5', fill:false, tension:.3 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',autoSkip:false,maxRotation:0}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>v===0?'0':fmtK(v)}} } }
+  });
+}
+
+// ─── FORECAST ────────────────────────────────────────────────────────────────
+function setScenario(k) {
+  currentKey = k;
+  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  document.querySelector('.stab.'+k).classList.add('active');
+  renderProj();
+}
+
+function renderProj() {
+  const s    = SCENARIOS[currentKey];
+  const rec  = buildRec(currentKey);
+  const desp = buildDesp(currentKey);
+  const liq  = rec.map((r,i) => r-desp[i]);
+  const totRec  = rec.reduce((a,b)=>a+b,0);
+  const totDesp = desp.reduce((a,b)=>a+b,0);
+  const totLiq  = totRec-totDesp;
+  const totMeta = META_PROJ.reduce((a,b)=>a+b,0);
+  const totalAno= REALIZADO_ACUM+totRec;
+  const metaAnual = PLANEJADO.reduce((a,b)=>a+b,0);
+
+  document.getElementById('scenario-label-tbl').textContent = s.label.toLowerCase();
+  document.getElementById('proj-sub').textContent = s.sub;
+
+  const col = currentKey==='bull'?'#4ADE80':currentKey==='bear'?'#F87171':'#9B87F5';
+
+  document.getElementById('proj-kpis').innerHTML = [
+    { label:'Receita proj. mai–dez', val:fmt(totRec),         sub:pct(totRec,totMeta)+' da meta período',    cls:'' },
+    { label:'Total ano (real+proj)', val:fmt(totalAno),        sub:pct(totalAno,metaAnual)+' da meta anual', cls:'' },
+    { label:'Resultado líquido',     val:fmt(totLiq),          sub:'receita – despesas', cls:totLiq>=0?'up':'down' },
+    { label:'Gap p/ meta mai–dez',   val:fmt(totMeta-totRec),  sub:'falta fechar', cls:'down' },
+  ].map(k=>`<div class="kpi-card ${currentKey==='bull'?'green':currentKey==='bear'?'red':'purple'}">
+    <div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div>
+    <div class="kpi-sub ${k.cls}">${k.sub}</div></div>`).join('');
+
+  if (chartProj) chartProj.destroy();
+  chartProj = new Chart(document.getElementById('chartProj'), {
+    data:{ labels:MESES_PROJ, datasets:[
+      { type:'bar',  label:'Meta',    data:META_PROJ, backgroundColor:'#2C2C2A', borderRadius:4 },
+      { type:'bar',  label:'Cenário', data:rec,       backgroundColor:col+'99', borderRadius:4 },
+      { type:'line', label:'Desp',    data:desp, borderColor:'#F87171', borderWidth:2, borderDash:[4,3], pointRadius:3, pointBackgroundColor:'#F87171', fill:false, tension:.2 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88'}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>v===0?'0':fmtK(v)}} } }
+  });
+
+  const bR=buildRec('base'),bD=buildDesp('base');
+  const uR=buildRec('bull'),uD=buildDesp('bull');
+  const eR=buildRec('bear'),eD=buildDesp('bear');
+  let ab=CAIXA,au=CAIXA,ae=CAIXA;
+  const acBase=[],acBull=[],acBear=[];
+  for(let i=0;i<8;i++){
+    ab+=bR[i]-bD[i]; acBase.push(Math.round(ab));
+    au+=uR[i]-uD[i]; acBull.push(Math.round(au));
+    ae+=eR[i]-eD[i]; acBear.push(Math.round(ae));
+  }
+
+  if (chartAcum) chartAcum.destroy();
+  chartAcum = new Chart(document.getElementById('chartAcum'), {
+    type:'line',
+    data:{ labels:MESES_PROJ, datasets:[
+      { label:'Base',       data:acBase, borderColor:'#9B87F5', borderWidth:2, pointRadius:3, fill:false, tension:.3 },
+      { label:'Otimista',   data:acBull, borderColor:'#4ADE80', borderWidth:2, pointRadius:3, fill:false, tension:.3, borderDash:[6,3] },
+      { label:'Conservador',data:acBear, borderColor:'#F87171', borderWidth:2, pointRadius:3, fill:false, tension:.3, borderDash:[2,4] }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88'}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7C7A88',callback:v=>fmtK(v)}} } }
+  });
+
+  const tbody = MESES_PROJ.map((m,i) => {
+    const liqV=liq[i], liqC=liqV>=0?'pos':'neg';
+    const vs=META_PROJ[i]>0?pct(rec[i],META_PROJ[i]):'—';
+    const tipo=i<2?'real':'proj';
+    return `<tr><td>${m}/2026<span class="pill ${tipo}">${tipo==='real'?'confirmado':'projeção'}</span></td>
+      <td>${fmt(META_PROJ[i])}</td><td>${fmt(rec[i])}</td>
+      <td class="${parseFloat(vs)>50?'pos':'neg'}">${vs}</td>
+      <td>${fmt(desp[i])}</td><td class="${liqC}">${fmt(liqV)}</td></tr>`;
+  }).join('');
+  document.getElementById('proj-table').innerHTML = `
+    <thead><tr><th>Mês</th><th>Meta original</th><th>Receita proj.</th><th>% meta</th><th>Despesas</th><th>Resultado</th></tr></thead>
+    <tbody>${tbody}</tbody>
+    <tfoot><tr class="foot-row"><td>Total mai–dez</td><td>${fmt(totMeta)}</td><td>${fmt(totRec)}</td>
+    <td class="${totRec/totMeta>0.5?'pos':'neg'}">${pct(totRec,totMeta)}</td><td>${fmt(totDesp)}</td>
+    <td class="${totLiq>=0?'pos':'neg'}">${fmt(totLiq)}</td></tr></tfoot>`;
+
+  document.getElementById('cmp-grid').innerHTML = ['base','bull','bear'].map(k => {
+    const r2=buildRec(k),d2=buildDesp(k);
+    const tR=r2.reduce((a,b)=>a+b,0),tD=d2.reduce((a,b)=>a+b,0),tL=tR-tD;
+    let ac=CAIXA; r2.forEach((r,i)=>ac+=r-d2[i]);
+    const mg=tR>0?(tL/tR*100).toFixed(1):'0.0';
+    return `<div class="cmp-card ${k}">
+      <div class="cmp-name">${SCENARIOS[k].label}</div>
+      <div class="cmp-row"><span class="cmp-label">Receita mai–dez</span><span class="cmp-val">${fmt(tR)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">% da meta período</span><span class="cmp-val ${tR/(totMeta||1)>0.5?'pos':'neg'}">${pct(tR,totMeta)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">Resultado líquido</span><span class="cmp-val ${tL>=0?'pos':'neg'}">${fmt(tL)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">Margem</span><span class="cmp-val">${mg}%</span></div>
+      <div class="cmp-row"><span class="cmp-label">Saldo final out/26</span><span class="cmp-val ${ac>=0?'pos':'neg'}">${fmt(ac)}</span></div>
+      <div class="cmp-row"><span class="cmp-label">% meta anual</span><span class="cmp-val ${(REALIZADO_ACUM+tR)/metaAnual>0.3?'pos':'neg'}">${pct(REALIZADO_ACUM+tR,metaAnual)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ─── TAB ─────────────────────────────────────────────────────────────────────
+function showTab(t) {
+  document.getElementById('tab-ativos').style.display   = t==='ativos'  ?'block':'none';
+  document.getElementById('tab-quitados').style.display = t==='quitados'?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active',(i===0&&t==='ativos')||(i===1&&t==='quitados')));
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function init() {
+  setStatus('Carregando...', false);
+  const now   = new Date();
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('periodo').textContent     = meses[now.getMonth()]+' '+now.getFullYear();
+  document.getElementById('footer-data').textContent = now.toLocaleDateString('pt-BR')+' · '+meses[now.getMonth()];
+
+  // Pré-seleciona mês atual no seletor
+  const sel = document.getElementById('mes-selector');
+  if (sel) sel.value = meses[now.getMonth()] || 'Abril';
+  sel?.addEventListener('change', atualizarKpisMes);
+
+  try {
+    await Promise.all([loadForecast(), loadReceber(), loadPagar(), loadExtrato(), loadClientes()]);
+    renderAnual();
+    renderProj();
+    setStatus('Dados atualizados', true);
+  } catch(e) {
+    console.error('Erro:', e);
+    setStatus('Erro ao carregar — verifique se a planilha está publicada', false);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
