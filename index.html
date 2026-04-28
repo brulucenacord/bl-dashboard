@@ -599,9 +599,24 @@ async function loadClientes() {
   document.getElementById('kpi-ticket').textContent = fmt(ticketMedio);
 
   // Receita total desde o início (soma de todos os contratos)
-const receitaTotal = cliRows.reduce((s,r) => s+(r[3]||0), 0);
+// Filtra contratos a partir de nov/2025 (col 7 = Data Início)
+// Data Início vem como "nov./2025" ou "Date(2025,10,1)" ou similar
+const contratosAtivos = cliRows.filter(r => {
+  const d = r[7];
+  if (!d) return false;
+  const s = String(d);
+  // Formato Date(ano, mes, dia) — mes é 0-indexado
+  const m = s.match(/Date\((\d+),(\d+)/);
+  if (m) {
+    const ano = parseInt(m[1]);
+    const mes = parseInt(m[2]); // 0=jan, 10=nov
+    return (ano > 2025) || (ano === 2025 && mes >= 10);
+  }
+  return true; // se não conseguir parsear, inclui
+});
+const receitaTotal = contratosAtivos.reduce((s,r) => s+(r[3]||0), 0);
 document.getElementById('kpi-receita-total').textContent = fmt(receitaTotal);
-document.getElementById('kpi-receita-total-sub').textContent = cliRows.length+' contratos desde nov/2025';
+document.getElementById('kpi-receita-total-sub').textContent = contratosAtivos.length+' contratos desde nov/2025';
 
   document.getElementById('tab-ativos').innerHTML = comSaldo.length
     ? comSaldo.map(r => {
