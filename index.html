@@ -595,7 +595,7 @@ async function loadClientes() {
 
   const contratos = ativos.map(r => r[3]).filter(v => v && typeof v==='number');
   const ticketMedio = contratos.length ? contratos.reduce((a,b)=>a+b,0)/contratos.length : 0;
-  document.getElementById('kpi-ticket').textContent = fmt(ticketMedio);
+ 
 
   // Receita total desde o início (soma de todos os contratos)
 // Filtra contratos a partir de nov/2025 (col 7 = Data Início)
